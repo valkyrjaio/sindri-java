@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    SpotBugs exclude filter — permanent exclusions for false positives.
+
+    This file is the equivalent of phpstan-baseline.neon. Add <Match> entries
+    here to suppress known false positives. To suppress a newly found bug
+    class across the whole project, use:
+
+        <Match>
+            <Bug pattern="BUG_PATTERN_NAME" />
+        </Match>
+
+    To suppress for a specific class:
+
+        <Match>
+            <Class name="io.sindri.some.ClassName" />
+            <Bug pattern="BUG_PATTERN_NAME" />
+        </Match>
+
+    Run `gradle spotbugsMain` locally to see the full bug report.
+-->
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+        Intentional design: data records are plain value holders for the Sindri
+        pipeline. They accept and expose mutable lists by design — callers own the
+        lists they pass in and mutate them directly (e.g. merge()). Defensively
+        copying every list in every accessor would add noise with no practical benefit.
+    -->
+    <Match>
+        <Package name="~io\.sindri\.ast\.data.*" />
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Package name="~io\.sindri\.ast\.data.*" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+    <Match>
+        <Package name="~io\.sindri\.provider\.data.*" />
+        <Bug pattern="EI_EXPOSE_REP" />
+    </Match>
+    <Match>
+        <Package name="~io\.sindri\.provider\.data.*" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+
+    <!--
+        GenerateDataFromConfigCommand stores injected container/route instances by design.
+        The application kernel owns the lifecycle; this is not a security exposure.
+    -->
+    <Match>
+        <Class name="io.sindri.cli.command.GenerateDataFromConfigCommand" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+
+    <!--
+        Intentional design: generators write Java source code as strings. The text
+        blocks use \n deliberately to produce Unix-style newlines in generated files
+        regardless of the platform running Sindri.
+    -->
+    <Match>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE" />
+    </Match>
+
+    <!--
+        AstReader.parseFile() wraps FileNotFoundException in RuntimeException because
+        a missing source file is always a programmer error at this stage of the
+        pipeline — callers have already resolved the path. A checked exception would
+        add unnecessary noise to every call site.
+    -->
+    <Match>
+        <Class name="io.sindri.ast.AstReader" />
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION" />
+    </Match>
+
+</FindBugsFilter>
