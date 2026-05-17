@@ -1,6 +1,8 @@
 plugins {
     java
     application
+    `maven-publish`
+    signing
 }
 
 group = "io.sindri"
@@ -21,6 +23,8 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 tasks.withType<JavaCompile> {
@@ -38,6 +42,47 @@ tasks.jar {
     }
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            pom {
+                name.set("Sindri")
+                description.set("The Sindri Java Code Generator.")
+                url.set("https://github.com/valkyrjaio/sindri-java")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("melechmizrachi")
+                        name.set("Melech Mizrachi")
+                        email.set("melechmizrachi@gmail.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/valkyrjaio/sindri-java.git")
+                    developerConnection.set("scm:git:ssh://github.com/valkyrjaio/sindri-java.git")
+                    url.set("https://github.com/valkyrjaio/sindri-java")
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "MavenCentral"
+            url = uri("https://central.sonatype.com/api/v1/publisher/upload")
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["maven"])
 }
 
 // CI tasks — run from the project root without cd-ing into each CI directory
