@@ -17,9 +17,12 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpRoutingDataGeneratorTest {
@@ -70,5 +73,107 @@ public class HttpRoutingDataGeneratorTest {
         String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
         assertTrue(content.contains("\"/users/{id}\""));
         assertTrue(content.contains("\"users.show\""));
+    }
+
+    @Test
+    void generateFile_withTwoRoutes_writesCommaDelimited(@TempDir Path tempDir) throws IOException {
+        Map<String, String> routes = new LinkedHashMap<>();
+        routes.put("users.index", "fixtures.provider.UserProvider::indexHandler");
+        routes.put("users.show", "fixtures.provider.UserProvider::showHandler");
+        Map<String, HttpRouteData> routeData = new LinkedHashMap<>();
+        routeData.put("users.index", new HttpRouteData("/users", "users.index", List.of("GET")));
+        routeData.put("users.show", new HttpRouteData("/users/1", "users.show", List.of("GET")));
+
+        generator.generateFile(tempDir.toString(), "AppHttpRoutingData", "test.data", routes, routeData);
+
+        String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
+        assertTrue(content.contains("\"users.index\", fixtures.provider.UserProvider::indexHandler,"));
+        assertTrue(content.contains("\"/users\", \"users.index\", \"/users/1\", \"users.show\""));
+    }
+
+    @Test
+    void generateClassContents_delegatesCorrectly() {
+        var routes = Map.of("users.index", "fixtures.provider.UserProvider::indexHandler");
+        var routeData = Map.of("users.index", new HttpRouteData("/users", "users.index", List.of("GET")));
+
+        String result = generator.generateClassContents(routes, routeData);
+
+        assertTrue(result.contains("\"users.index\""));
+        assertTrue(result.contains("fixtures.provider.UserProvider::indexHandler"));
+    }
+
+    @Test
+    void generateFile_withManyRoutes_usesMapOfEntries(@TempDir Path tempDir) throws IOException {
+        Map<String, String> routes = new LinkedHashMap<>();
+        Map<String, HttpRouteData> routeData = new LinkedHashMap<>();
+        for (int i = 1; i <= 11; i++) {
+            String name = "route." + i;
+            routes.put(name, "fixtures.provider.Provider" + i + "::handler");
+            routeData.put(name, new HttpRouteData("/path/" + i, name, List.of("GET")));
+        }
+
+        generator.generateFile(tempDir.toString(), "AppHttpRoutingData", "test.data", routes, routeData);
+
+        String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
+        assertTrue(content.contains("Map.ofEntries("));
+        assertTrue(content.contains("Map.entry(\"route.1\""));
+    }
+
+    @Test
+    void generateFile_withHeadOnlyRoute_excludesFromPaths(@TempDir Path tempDir) throws IOException {
+        var routes = Map.of("head.only", "fixtures.provider.Provider::headHandler");
+        var routeData = Map.of("head.only", new HttpRouteData("/head-only", "head.only", List.of("HEAD")));
+
+        generator.generateFile(tempDir.toString(), "AppHttpRoutingData", "test.data", routes, routeData);
+
+        String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
+        assertFalse(content.contains("\"/head-only\""));
+    }
+
+    @Test
+    void generateFile_withManyPathsSameMethod_usesInnerMapOfEntries(@TempDir Path tempDir) throws IOException {
+        Map<String, String> routes = new LinkedHashMap<>();
+        Map<String, HttpRouteData> routeData = new LinkedHashMap<>();
+        for (int i = 1; i <= 11; i++) {
+            String name = "users." + i;
+            routes.put(name, "fixtures.provider.Provider::handler" + i);
+            routeData.put(name, new HttpRouteData("/users/" + i, name, List.of("GET")));
+        }
+
+        generator.generateFile(tempDir.toString(), "AppHttpRoutingData", "test.data", routes, routeData);
+
+        String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
+        assertTrue(content.contains("Map.ofEntries(Map.entry("));
+    }
+
+    @Test
+    void generateFile_withMultipleRequestMethods_writesCommasBetweenMethods(@TempDir Path tempDir) throws IOException {
+        Map<String, String> routes = new LinkedHashMap<>();
+        Map<String, HttpRouteData> routeData = new LinkedHashMap<>();
+        routes.put("users.index", "fixtures.provider.UserProvider::indexHandler");
+        routes.put("users.create", "fixtures.provider.UserProvider::createHandler");
+        routeData.put("users.index", new HttpRouteData("/users", "users.index", List.of("GET")));
+        routeData.put("users.create", new HttpRouteData("/users", "users.create", List.of("POST")));
+
+        generator.generateFile(tempDir.toString(), "AppHttpRoutingData", "test.data", routes, routeData);
+
+        String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
+        assertTrue(content.contains("Map.entry(\"GET\","));
+        assertTrue(content.contains("Map.entry(\"POST\","));
+    }
+
+    @Test
+    void buildInnerPathMap_withEmptyMap_returnsMapOfEmpty() {
+        TestableGenerator gen = new TestableGenerator();
+
+        String result = gen.testBuildInnerPathMap(Map.of());
+
+        assertEquals("Map.of()", result);
+    }
+
+    private static class TestableGenerator extends AstHttpDataFileGenerator {
+        String testBuildInnerPathMap(Map<String, String> pathMap) {
+            return buildInnerPathMap(pathMap);
+        }
     }
 }

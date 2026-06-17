@@ -17,6 +17,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpRouteAttributeReaderTest {
@@ -67,5 +69,50 @@ public class HttpRouteAttributeReaderTest {
         assertTrue(postRoute.requestMethods().contains("POST"));
         assertNotNull(postRoute.handler());
         assertEquals("postHandler", postRoute.handler().method());
+    }
+
+    @Test
+    void readFile_withNoRouteMethod_returnsEmpty() {
+        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestNoRouteHttpControllerClass.java"));
+
+        assertTrue(result.routeData().isEmpty());
+    }
+
+    @Test
+    void readFile_withRouteButNoRouteHandler_handlerIsNull() {
+        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestNoRouteHandlerHttpControllerClass.java"));
+
+        assertEquals(1, result.routeData().size());
+        HttpRouteData route = result.routeData().get("no.handler");
+        assertNotNull(route);
+        assertNull(route.handler());
+    }
+
+    @Test
+    void readFile_withSingleRequestMethod_parsesCorrectly() {
+        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestSingleRequestMethodHttpControllerClass.java"));
+
+        assertEquals(1, result.routeData().size());
+        HttpRouteData route = result.routeData().get("single.get");
+        assertNotNull(route);
+        assertEquals(List.of("GET"), route.requestMethods());
+    }
+
+    @Test
+    void readFile_withNoTypeDeclaration_throwsException() {
+        String path = fixturePath("Http/Controller/TestNoTypeDeclHttpControllerClass.java");
+
+        assertThrows(RuntimeException.class, () -> reader.readFile(path));
+    }
+
+    @Test
+    void readFile_withStringRequestMethod_usesToStringFallback() {
+        HttpRouteAttributeResult result = reader.readFile(
+                fixturePath("Http/Controller/TestStringRequestMethodHttpControllerClass.java"));
+
+        assertEquals(1, result.routeData().size());
+        HttpRouteData route = result.routeData().get("str.get");
+        assertNotNull(route);
+        assertEquals(List.of("\"GET\""), route.requestMethods());
     }
 }

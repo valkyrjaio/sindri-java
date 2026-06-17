@@ -41,4 +41,54 @@ public class ServiceProviderReaderTest {
                 new String[]{"io.sindri.tests.classes.container.provider.TestServiceProviderClass", "publishTestService"},
                 ref);
     }
+
+    @Test
+    void readFile_noPublishersMethod_returnsEmpty() {
+        ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestEmptyServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+        assertTrue(result.serviceClasses().isEmpty());
+    }
+
+    @Test
+    void readFile_publishersThrows_returnsEmpty() {
+        ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestNoReturnServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+        assertTrue(result.serviceClasses().isEmpty());
+    }
+
+    @Test
+    void readFile_nonCallReturnExpr_returnsEmpty() {
+        ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestFieldPublishersServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+        assertTrue(result.serviceClasses().isEmpty());
+    }
+
+    @Test
+    void readFile_mixedEntries_skipsInvalidKeyAndNonMethodRef() {
+        ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestMixedPublishersServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+    }
+
+    @Test
+    void readFile_mapOfEntriesPublishers_parsesEntries() {
+        ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestOfEntriesServiceProviderClass.java"));
+
+        assertEquals(1, result.publishers().size());
+        assertTrue(result.publishers().containsKey("io.sindri.tests.classes.container.TestService"));
+        String[] ref = result.publishers().get("io.sindri.tests.classes.container.TestService");
+        assertArrayEquals(
+                new String[]{"io.sindri.tests.classes.container.provider.TestOfEntriesServiceProviderClass", "publish"},
+                ref);
+    }
+
+    @Test
+    void readFile_badOfEntriesEntries_skipsInvalidArgs() {
+        ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestBadOfEntriesServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+    }
 }
