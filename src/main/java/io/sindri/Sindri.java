@@ -9,6 +9,7 @@
 
 package io.sindri;
 
+import io.sindri.constant.SindriInfo;
 import io.sindri.provider.SindriComponentProvider;
 import io.valkyrja.application.data.CliConfig;
 import io.valkyrja.application.entry.Cli;
@@ -21,7 +22,7 @@ public class Sindri extends Cli {
                 new CliConfig(
                         "Sindri",
                         System.getProperty("user.dir"),
-                        "26.0.0",
+                        SindriInfo.VERSION,
                         "production",
                         true,
                         "UTC",

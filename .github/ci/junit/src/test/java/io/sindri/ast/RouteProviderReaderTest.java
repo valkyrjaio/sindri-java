@@ -13,6 +13,7 @@ import io.sindri.ast.data.result.RouteProviderResult;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RouteProviderReaderTest {
 
@@ -28,5 +29,21 @@ public class RouteProviderReaderTest {
 
         assertEquals(1, result.controllerClasses().size());
         assertEquals("io.sindri.tests.classes.http.controller.TestHttpControllerClass", result.controllerClasses().get(0));
+    }
+
+    @Test
+    void readFile_noGetControllerClassesMethod_returnsEmpty() {
+        RouteProviderResult result = reader.readFile(fixturePath("Http/Provider/TestEmptyRouteProviderClass.java"));
+
+        assertTrue(result.controllerClasses().isEmpty());
+        assertTrue(result.routes().isEmpty());
+    }
+
+    @Test
+    void readFile_getControllerClassesThrows_returnsEmpty() {
+        RouteProviderResult result = reader.readFile(fixturePath("Http/Provider/TestNoReturnRouteProviderClass.java"));
+
+        assertTrue(result.controllerClasses().isEmpty());
+        assertTrue(result.routes().isEmpty());
     }
 }

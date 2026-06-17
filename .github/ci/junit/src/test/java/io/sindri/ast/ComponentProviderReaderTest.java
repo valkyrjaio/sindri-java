@@ -54,4 +54,22 @@ public class ComponentProviderReaderTest {
         assertTrue(data.componentProviders().isEmpty());
         assertTrue(data.cliRouteProviders().isEmpty());
     }
+
+    @Test
+    void readFile_missingMethods_returnsEmptyForMissingOnes() {
+        ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestMinimalComponentProviderClass.java"));
+
+        assertTrue(data.componentProviders().isEmpty());
+        assertTrue(data.listenerProviders().isEmpty());
+        assertTrue(data.cliRouteProviders().isEmpty());
+        assertTrue(data.httpRouteProviders().isEmpty());
+        assertEquals(1, data.serviceProviders().size());
+    }
+
+    @Test
+    void readFile_methodWithNoReturn_returnsEmpty() {
+        ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestNoReturnComponentProviderClass.java"));
+
+        assertTrue(data.serviceProviders().isEmpty());
+    }
 }

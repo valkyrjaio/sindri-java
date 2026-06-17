@@ -36,4 +36,11 @@ public class CliRouteAttributeReaderTest {
 
         assertTrue(result.routes().containsKey("greet"));
     }
+
+    @Test
+    void readFile_withNoRouteMethod_returnsEmpty() {
+        CliRouteAttributeResult result = reader.readFile(fixturePath("Cli/Controller/TestNoRouteCliControllerClass.java"));
+
+        assertTrue(result.routes().isEmpty());
+    }
 }

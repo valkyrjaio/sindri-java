@@ -13,6 +13,7 @@ import io.sindri.ast.data.result.ListenerProviderResult;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ListenerProviderReaderTest {
 
@@ -35,5 +36,21 @@ public class ListenerProviderReaderTest {
         ListenerProviderResult result = reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"));
 
         assertEquals("io.valkyrja.event.data.Listener", result.listenerClasses().get(0));
+    }
+
+    @Test
+    void readFile_noGetListenersMethod_returnsEmpty() {
+        ListenerProviderResult result = reader.readFile(fixturePath("Event/Provider/TestEmptyListenerProviderClass.java"));
+
+        assertTrue(result.listenerClasses().isEmpty());
+        assertTrue(result.listeners().isEmpty());
+    }
+
+    @Test
+    void readFile_getListenersThrows_returnsEmpty() {
+        ListenerProviderResult result = reader.readFile(fixturePath("Event/Provider/TestNoReturnListenerProviderClass.java"));
+
+        assertTrue(result.listenerClasses().isEmpty());
+        assertTrue(result.listeners().isEmpty());
     }
 }
