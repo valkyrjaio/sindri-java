@@ -1,12 +1,15 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     java
     application
-    `maven-publish`
-    signing
+    id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
 group = "io.sindri"
-version = "26.0.0"
+// Sourced from VERSION.md so the release pipeline (which bumps VERSION.md) drives the
+// version that gets published. The leading "v" is stripped for Maven compatibility.
+version = file("VERSION.md").readText().trim().removePrefix("v")
 
 repositories {
     mavenLocal()
@@ -23,8 +26,6 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
-    withJavadocJar()
-    withSourcesJar()
 }
 
 tasks.withType<JavaCompile> {
@@ -44,45 +45,35 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            pom {
-                name.set("Sindri")
-                description.set("The Sindri Java Code Generator.")
-                url.set("https://github.com/valkyrjaio/sindri-java")
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("melechmizrachi")
-                        name.set("Melech Mizrachi")
-                        email.set("melechmizrachi@gmail.com")
-                    }
-                }
-                scm {
-                    connection.set("scm:git:git://github.com/valkyrjaio/sindri-java.git")
-                    developerConnection.set("scm:git:ssh://github.com/valkyrjaio/sindri-java.git")
-                    url.set("https://github.com/valkyrjaio/sindri-java")
-                }
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+
+    coordinates(group.toString(), "sindri", version.toString())
+
+    pom {
+        name.set("Sindri")
+        description.set("The Sindri Java Code Generator.")
+        url.set("https://github.com/valkyrjaio/sindri-java")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
-    }
-    repositories {
-        maven {
-            name = "MavenCentral"
-            url = uri("https://central.sonatype.com/api/v1/publisher/upload")
+        developers {
+            developer {
+                id.set("melechmizrachi")
+                name.set("Melech Mizrachi")
+                email.set("melechmizrachi@gmail.com")
+            }
+        }
+        scm {
+            connection.set("scm:git:git://github.com/valkyrjaio/sindri-java.git")
+            developerConnection.set("scm:git:ssh://github.com/valkyrjaio/sindri-java.git")
+            url.set("https://github.com/valkyrjaio/sindri-java")
         }
     }
-}
-
-signing {
-    sign(publishing.publications["maven"])
 }
 
 // CI tasks — run from the project root without cd-ing into each CI directory
