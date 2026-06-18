@@ -17,9 +17,9 @@ that make it all work faster and better.
 <p>
     <a href="https://central.sonatype.com/artifact/io.sindri/sindri"><img src="https://img.shields.io/maven-central/v/io.sindri/sindri?label=Maven%20Central" alt="Latest Stable Version"></a>
     <a href="https://github.com/valkyrjaio/sindri-java"><img src="https://img.shields.io/badge/Java-21--25-orange" alt="Java Version"></a>
-    <a href="https://github.com/valkyrjaio/sindri-java/blob/master/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
-    <a href="https://github.com/valkyrjaio/sindri-java/actions/workflows/ci.yml?query=branch%3Amaster"><img src="https://github.com/valkyrjaio/sindri-java/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI Status"></a>
-    <a href="https://coveralls.io/github/valkyrjaio/sindri-java?branch=master"><img src="https://coveralls.io/repos/github/valkyrjaio/sindri-java/badge.svg?branch=master" alt="Coverage Status"></a>
+    <a href="https://github.com/valkyrjaio/sindri-java/blob/26.x/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
+    <a href="https://github.com/valkyrjaio/sindri-java/actions/workflows/ci.yml?query=branch%3A26.x"><img src="https://github.com/valkyrjaio/sindri-java/actions/workflows/ci.yml/badge.svg?branch=26.x" alt="CI Status"></a>
+    <a href="https://coveralls.io/github/valkyrjaio/sindri-java?branch=26.x"><img src="https://coveralls.io/repos/github/valkyrjaio/sindri-java/badge.svg?branch=26.x" alt="Coverage Status"></a>
     <a href="https://sonarcloud.io/summary/new_code?id=valkyrjaio_sindri-java"><img src="https://sonarcloud.io/api/project_badges/measure?project=valkyrjaio_sindri-java&metric=sqale_rating" alt="Maintainability Rating"></a>
 </p>
 
@@ -146,9 +146,9 @@ Sindri is open-source software licensed under the
 
 [github sindri]: https://github.com/valkyrjaio/sindri-java
 
-[docs url]: https://github.com/valkyrjaio/valkyrja-java/blob/master/src/main/java/io/valkyrja/README.md
+[docs url]: https://github.com/valkyrjaio/valkyrja-java/blob/26.x/src/main/java/io/valkyrja/README.md
 
-[Versioning and Release Process url]: https://github.com/valkyrjaio/valkyrja-java/blob/master/src/main/java/io/valkyrja/VERSIONING_AND_RELEASE_PROCESS.md
+[Versioning and Release Process url]: https://github.com/valkyrjaio/valkyrja-java/blob/26.x/src/main/java/io/valkyrja/VERSIONING_AND_RELEASE_PROCESS.md
 
 [contributing url]: https://github.com/valkyrjaio/.github/blob/master/CONTRIBUTING.md
 
