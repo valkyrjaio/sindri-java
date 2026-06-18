@@ -7,7 +7,8 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.ast.data.result;
+package io.sindri.unit.ast.data.result;
+import io.sindri.ast.data.result.*;
 
 import com.github.javaparser.ast.expr.NameExpr;
 import org.junit.jupiter.api.Test;

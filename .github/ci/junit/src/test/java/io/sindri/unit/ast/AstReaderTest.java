@@ -7,7 +7,8 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.ast;
+package io.sindri.unit.ast;
+import io.sindri.ast.*;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.NodeList;

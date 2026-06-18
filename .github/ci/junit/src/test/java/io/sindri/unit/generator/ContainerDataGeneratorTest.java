@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.generator;
+package io.sindri.unit.generator;
 
 import io.sindri.generator.ast.container.AstContainerDataFileGenerator;
 import io.sindri.generator.enum_.GenerateStatus;

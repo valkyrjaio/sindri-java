@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.generator;
+package io.sindri.unit.generator;
 
 import io.sindri.ast.data.HttpRouteData;
 import io.sindri.generator.ast.http.AstHttpDataFileGenerator;
