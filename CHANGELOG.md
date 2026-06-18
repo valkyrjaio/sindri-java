@@ -1,6 +1,10 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.0.0...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.0.1...26.x)
+
+## [v26.0.1](https://github.com/valkyrjaio/sindri-java/compare/v26.0.0...v26.0.1) - 2026-06-17
+
+* [CI] Gate the local framework composite build behind -PlocalFramework by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/17
 
 ## [v26.0.0](https://github.com/valkyrjaio/sindri-java/compare/26.0.0...v26.0.0) - 2026-06-17
 
