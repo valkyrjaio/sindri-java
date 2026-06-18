@@ -7,7 +7,8 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.ast;
+package io.sindri.unit.ast;
+import io.sindri.ast.*;
 
 import io.sindri.ast.data.result.ListenerProviderResult;
 import org.junit.jupiter.api.Test;
