@@ -47,4 +47,38 @@ public class RouteProviderReaderTest {
         assertTrue(result.controllerClasses().isEmpty());
         assertTrue(result.routes().isEmpty());
     }
+
+    @Test
+    void readFile_emptyFqn_isSkipped() {
+        var reader =
+                new RouteProviderReader() {
+                    @Override
+                    protected String extractClassExprFqn(
+                            com.github.javaparser.ast.expr.Expression expr, java.util.Map<String, String> importMap, String pkg) {
+                        return "";
+                    }
+                };
+
+        assertTrue(
+                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderClass.java"))
+                        .controllerClasses()
+                        .isEmpty());
+    }
+
+    @Test
+    void readFile_nonClassExprItem_isSkipped() {
+        var reader =
+                new RouteProviderReader() {
+                    @Override
+                    protected java.util.List<com.github.javaparser.ast.expr.Expression> extractListOfItems(com.github.javaparser.ast.expr.Expression expr) {
+                        return java.util.List.of(new com.github.javaparser.ast.expr.NameExpr("x"));
+                    }
+                };
+
+        assertTrue(
+                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderClass.java"))
+                        .controllerClasses()
+                        .isEmpty());
+    }
+
 }
