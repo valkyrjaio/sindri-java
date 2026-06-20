@@ -6,7 +6,7 @@ plugins {
     id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
-group = "io.sindri"
+group = "io.valkyrja"
 // Sourced from VERSION.md so the release pipeline (which bumps VERSION.md) drives the
 // version that gets published. The leading "v" is stripped for Maven compatibility.
 version = file("VERSION.md").readText().trim().removePrefix("v")
