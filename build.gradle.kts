@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.valkyrja:valkyrja:26.1.0")
+    implementation("io.valkyrja:valkyrja:26.1.1")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.26.4")
     compileOnly("org.jspecify:jspecify:1.0.0")
 }

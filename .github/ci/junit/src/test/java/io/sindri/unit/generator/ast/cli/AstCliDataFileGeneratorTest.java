@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.unit.generator;
+package io.sindri.unit.generator.ast.cli;
 
 import io.sindri.generator.ast.cli.AstCliDataFileGenerator;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CliRoutingDataGeneratorTest {
+public class AstCliDataFileGeneratorTest {
 
     private final AstCliDataFileGenerator generator = new AstCliDataFileGenerator();
 

@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.unit.generator;
+package io.sindri.unit.generator.ast.http;
 
 import io.sindri.ast.data.HttpRouteData;
 import io.sindri.generator.ast.http.AstHttpDataFileGenerator;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class HttpRoutingDataGeneratorTest {
+public class AstHttpDataFileGeneratorTest {
 
     private final AstHttpDataFileGenerator generator = new AstHttpDataFileGenerator();
 
