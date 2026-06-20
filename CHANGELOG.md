@@ -1,6 +1,10 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.0.2...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.1.0...26.x)
+
+## [v26.1.0](https://github.com/valkyrjaio/sindri-java/compare/v26.0.2...v26.1.0) - 2026-06-19
+
+* [Maven] Fixing package name by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/26
 
 ## [v26.0.2](https://github.com/valkyrjaio/sindri-java/compare/v26.0.1...v26.0.2) - 2026-06-19
 
