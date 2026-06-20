@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.unit.generator;
+package io.sindri.unit.generator.ast.event;
 
 import io.sindri.generator.ast.event.AstEventDataFileGenerator;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EventDataGeneratorTest {
+public class AstEventDataFileGeneratorTest {
 
     private final AstEventDataFileGenerator generator = new AstEventDataFileGenerator();
 

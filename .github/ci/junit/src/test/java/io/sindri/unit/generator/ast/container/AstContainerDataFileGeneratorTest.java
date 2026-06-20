@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.unit.generator;
+package io.sindri.unit.generator.ast.container;
 
 import io.sindri.generator.ast.container.AstContainerDataFileGenerator;
 import io.sindri.generator.enum_.GenerateStatus;
@@ -23,7 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ContainerDataGeneratorTest {
+public class AstContainerDataFileGeneratorTest {
 
     private final AstContainerDataFileGenerator generator = new AstContainerDataFileGenerator();
 
