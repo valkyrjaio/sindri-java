@@ -10,6 +10,7 @@
 package io.sindri.unit;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.sindri.Sindri;
 import io.valkyrja.cli.server.support.Exiter;
@@ -36,5 +37,10 @@ final class SindriTest {
             System.setIn(originalIn);
             Exiter.unfreeze();
         }
+    }
+
+    @Test
+    void isInstantiable() {
+        assertNotNull(new Sindri());
     }
 }
