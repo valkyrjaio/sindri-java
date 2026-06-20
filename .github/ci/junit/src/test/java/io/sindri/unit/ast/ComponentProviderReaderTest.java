@@ -73,4 +73,42 @@ public class ComponentProviderReaderTest {
 
         assertTrue(data.serviceProviders().isEmpty());
     }
+
+    @Test
+    void readFile_emptyFqn_isSkipped() {
+        var reader =
+                new ComponentProviderReader() {
+                    @Override
+                    protected String extractObjectCreationFqn(
+                            com.github.javaparser.ast.expr.Expression expr, java.util.Map<String, String> importMap, String pkg) {
+                        return "";
+                    }
+                };
+
+        assertTrue(
+                reader.readFile(
+                                fixturePath(
+                                        "Component/Provider/TestComponentProviderClass.java"))
+                        .serviceProviders()
+                        .isEmpty());
+    }
+
+    @Test
+    void readFile_nonObjectCreationItem_isSkipped() {
+        var reader =
+                new ComponentProviderReader() {
+                    @Override
+                    protected java.util.List<com.github.javaparser.ast.expr.Expression> extractListOfItems(com.github.javaparser.ast.expr.Expression expr) {
+                        return java.util.List.of(new com.github.javaparser.ast.expr.NameExpr("x"));
+                    }
+                };
+
+        assertTrue(
+                reader.readFile(
+                                fixturePath(
+                                        "Component/Provider/TestComponentProviderClass.java"))
+                        .serviceProviders()
+                        .isEmpty());
+    }
+
 }

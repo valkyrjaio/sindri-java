@@ -44,4 +44,13 @@ public class CliRouteAttributeReaderTest {
 
         assertTrue(result.routes().isEmpty());
     }
+
+    @Test
+    void readFile_markerRoute_isSkipped() {
+        CliRouteAttributeResult result =
+                reader.readFile(fixturePath("Cli/Controller/TestEdgeCliControllerClass.java"));
+
+        assertTrue(result.routes().isEmpty());
+    }
+
 }

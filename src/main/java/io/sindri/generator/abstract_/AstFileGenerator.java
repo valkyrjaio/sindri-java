@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public abstract class AstFileGenerator {
 
@@ -23,7 +24,7 @@ public abstract class AstFileGenerator {
         Path path = Paths.get(filePath);
         try {
             Path parent = path.getParent();
-            Files.createDirectories(parent != null ? parent : Paths.get("."));
+            Files.createDirectories(Objects.requireNonNullElse(parent, Paths.get(".")));
             String existing =
                     Files.exists(path) ? Files.readString(path, StandardCharsets.UTF_8) : null;
             if (data.equals(existing)) {

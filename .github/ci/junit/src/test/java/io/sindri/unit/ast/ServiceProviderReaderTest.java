@@ -92,4 +92,33 @@ public class ServiceProviderReaderTest {
 
         assertTrue(result.publishers().isEmpty());
     }
+
+    @Test
+    void readFile_mapOfEntries_isParsed() {
+        ServiceProviderResult result =
+                reader.readFile(
+                        fixturePath("Container/Provider/TestOfEntriesServiceProviderClass.java"));
+
+        assertEquals(1, result.publishers().size());
+    }
+
+    @Test
+    void readFile_neitherMapOfNorOfEntries_returnsEmpty() {
+        ServiceProviderResult result =
+                reader.readFile(
+                        fixturePath("Container/Provider/TestCopyOfServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+    }
+
+
+    @Test
+    void readFile_mapCallOtherThanOfOrOfEntries_returnsEmpty() {
+        ServiceProviderResult result =
+                reader.readFile(
+                        fixturePath("Container/Provider/TestMapOtherServiceProviderClass.java"));
+
+        assertTrue(result.publishers().isEmpty());
+    }
+
 }

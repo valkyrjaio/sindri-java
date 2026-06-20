@@ -54,4 +54,38 @@ public class ListenerProviderReaderTest {
         assertTrue(result.listenerClasses().isEmpty());
         assertTrue(result.listeners().isEmpty());
     }
+
+    @Test
+    void readFile_emptyFqn_isSkipped() {
+        var reader =
+                new ListenerProviderReader() {
+                    @Override
+                    protected String extractObjectCreationFqn(
+                            com.github.javaparser.ast.expr.Expression expr, java.util.Map<String, String> importMap, String pkg) {
+                        return "";
+                    }
+                };
+
+        assertTrue(
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"))
+                        .listenerClasses()
+                        .isEmpty());
+    }
+
+    @Test
+    void readFile_nonObjectCreationItem_isSkipped() {
+        var reader =
+                new ListenerProviderReader() {
+                    @Override
+                    protected java.util.List<com.github.javaparser.ast.expr.Expression> extractListOfItems(com.github.javaparser.ast.expr.Expression expr) {
+                        return java.util.List.of(new com.github.javaparser.ast.expr.NameExpr("x"));
+                    }
+                };
+
+        assertTrue(
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"))
+                        .listenerClasses()
+                        .isEmpty());
+    }
+
 }

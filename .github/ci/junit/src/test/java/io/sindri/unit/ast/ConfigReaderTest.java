@@ -77,4 +77,51 @@ final class ConfigReaderTest {
                 RuntimeException.class,
                 () -> new ConfigReader().readFile(fixturePath("Config/TestConfigNoThisCall.java")));
     }
+
+    @Test
+    void skipsListItemsThatAreNotObjectCreations() {
+        // A list arg containing a non-object-creation alongside a creation exercises both sides
+        // of the `item.isObjectCreationExpr()` guard.
+        var reader =
+                new ConfigReader() {
+                    @Override
+                    protected java.util.List<com.github.javaparser.ast.expr.Expression>
+                            extractListOfItems(com.github.javaparser.ast.expr.Expression expr) {
+                        return java.util.List.of(
+                                com.github.javaparser.StaticJavaParser.parseExpression("new Foo()"),
+                                new com.github.javaparser.ast.expr.NameExpr("notACreation"));
+                    }
+                };
+
+        // Only the object-creation item is collected; the NameExpr is skipped.
+        assertEquals(
+                1, reader.readFile(fixturePath("Config/TestConfigClass.java")).providers().size());
+    }
+
+    @Test
+    void readsConfigInDefaultPackageWithEmptyNamespace() {
+        // No package declaration (empty file package) and an empty namespace literal exercise the
+        // filePkg-empty / namespace-empty ternaries plus resolveClassName's empty-package arm.
+        ConfigResult result =
+                new ConfigReader().readFile(fixturePath("Config/TestConfigDefaultPackage.java"));
+
+        assertEquals("", result.namespace());
+        assertEquals(java.util.List.of("SomeProvider"), result.providers());
+    }
+
+    @Test
+    void skipsProvidersWhoseFqnResolvesEmpty() {
+        var reader =
+                new ConfigReader() {
+                    @Override
+                    protected String extractObjectCreationFqn(
+                            com.github.javaparser.ast.expr.Expression expr,
+                            java.util.Map<String, String> importMap,
+                            String pkg) {
+                        return "";
+                    }
+                };
+
+        assertTrue(reader.readFile(fixturePath("Config/TestConfigClass.java")).providers().isEmpty());
+    }
 }

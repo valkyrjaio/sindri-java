@@ -72,7 +72,7 @@ final class GenerateDataFromConfigCommandTest {
 
                 public final class AppComponentProvider {
                     public List<Object> getComponentProviders(Object app) {
-                        return List.of(new AppNestedComponentProvider());
+                        return List.of(new AppNestedComponentProvider(), new ext.Ext());
                     }
 
                     public List<Object> getContainerProviders(Object app) {
@@ -155,7 +155,7 @@ final class GenerateDataFromConfigCommandTest {
 
                 public final class AppCliRouteProvider {
                     public List<Class<?>> getControllerClasses() {
-                        return List.of(AppCliController.class);
+                        return List.of(AppCliController.class, ext.Ext.class);
                     }
 
                     public List<Object> getRoutes() {
@@ -174,7 +174,7 @@ final class GenerateDataFromConfigCommandTest {
 
                 public final class AppHttpRouteProvider {
                     public List<Class<?>> getControllerClasses() {
-                        return List.of(AppHttpController.class);
+                        return List.of(AppHttpController.class, ext.Ext.class);
                     }
 
                     public List<Object> getRoutes() {
@@ -262,5 +262,34 @@ final class GenerateDataFromConfigCommandTest {
         }
 
         assertTrue(buffer.toString(StandardCharsets.UTF_8).contains("Failed"));
+    }
+
+    @Test
+    void reportsExceptionClassNameWhenMessageIsNull() {
+        var container = new Container();
+        container.setSingleton(OutputFactoryContract.class, new OutputFactory());
+        var route = mock(RouteContract.class);
+        var argument = mock(ArgumentParameterContract.class);
+        when(route.getArgument("config")).thenReturn(argument);
+        when(argument.getFirstValue()).thenReturn("ignored");
+        // A thrown exception with a null message exercises the message-null arm of the report.
+        var command =
+                new GenerateDataFromConfigCommand(container, route) {
+                    @Override
+                    public void run(String configFilePath) {
+                        throw new RuntimeException();
+                    }
+                };
+
+        var original = System.out;
+        var buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8));
+        try {
+            command.execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        assertTrue(buffer.toString(StandardCharsets.UTF_8).contains(RuntimeException.class.getName()));
     }
 }

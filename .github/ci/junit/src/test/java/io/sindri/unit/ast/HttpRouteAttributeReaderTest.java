@@ -116,4 +116,13 @@ public class HttpRouteAttributeReaderTest {
         assertNotNull(route);
         assertEquals(List.of("\"GET\""), route.requestMethods());
     }
+
+    @Test
+    void readFile_edgeAnnotations_handlesMarkerHandlerAndDefaults() {
+        HttpRouteAttributeResult result =
+                reader.readFile(fixturePath("Http/Controller/TestEdgeHttpControllerClass.java"));
+
+        assertTrue(result.routes().containsKey("edge"));
+    }
+
 }
