@@ -40,6 +40,9 @@ public abstract class GenerateDataFromAst {
     private final HttpRouteAttributeReader httpRouteAttributeReader =
             new HttpRouteAttributeReader();
 
+    /** FQN → staged temp source path (or "" when unresolvable) for classpath-resolved sources. */
+    private final Map<String, String> classpathSourceCache = new java.util.HashMap<>();
+
     protected abstract ContainerDataFileGeneratorContract getContainerDataFileGenerator();
 
     protected abstract EventDataFileGeneratorContract getEventDataFileGenerator();
@@ -83,22 +86,26 @@ public abstract class GenerateDataFromAst {
     private ComponentProviderResult collectProviderData(ConfigResult config) {
         ComponentProviderResult combined = new ComponentProviderResult();
 
-        for (String providerFqn : config.providers()) {
+        // Walk the full component-provider graph breadth-first. Each provider can nest further
+        // component providers (e.g. an app provider pulling in framework providers, which pull in
+        // their own), so recurse to any depth, guarding against cycles with a visited set.
+        java.util.Deque<String> queue = new java.util.ArrayDeque<>(config.providers());
+        java.util.Set<String> visited = new java.util.HashSet<>();
+
+        while (!queue.isEmpty()) {
+            String providerFqn = queue.poll();
+            if (!visited.add(providerFqn)) {
+                continue;
+            }
+
             String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
             if (filePath.isEmpty()) {
                 continue;
             }
+
             ComponentProviderResult data = componentProviderReader.readFile(filePath);
             combined = combined.merge(data);
-
-            for (String nestedFqn : data.componentProviders()) {
-                String nestedPath = fqnToFilePath(nestedFqn, config.namespace(), config.dir());
-                if (!nestedPath.isEmpty()) {
-                    ComponentProviderResult nestedData =
-                            componentProviderReader.readFile(nestedPath);
-                    combined = combined.merge(nestedData);
-                }
-            }
+            queue.addAll(data.componentProviders());
         }
 
         return combined;
@@ -185,6 +192,42 @@ public abstract class GenerateDataFromAst {
             String relative = fqn.substring(namespacePkg.length() + 1).replace('.', '/');
             return srcDir + "/" + relative + ".java";
         }
-        return "";
+
+        // Framework/vendor classes live outside the app source tree. Resolve their .java from the
+        // sources jar on the classpath (the portable equivalent of PHP's
+        // ReflectionClass::getFileName()) so their publishers()/providers can be scanned too.
+        return resolveSourceFromClasspath(fqn);
+    }
+
+    /**
+     * Resolve a class's {@code .java} source from a sources jar on the classpath and stage it as a
+     * temp file (the AST readers accept only file paths). Returns {@code ""} when not found.
+     */
+    protected String resolveSourceFromClasspath(String fqn) {
+        String cached = classpathSourceCache.get(fqn);
+        if (cached != null) {
+            return cached;
+        }
+
+        String resource = fqn.replace('.', '/') + ".java";
+        try (java.io.InputStream in =
+                getClass().getClassLoader().getResourceAsStream(resource)) {
+            if (in == null) {
+                classpathSourceCache.put(fqn, "");
+                return "";
+            }
+
+            java.nio.file.Path temp = java.nio.file.Files.createTempFile("sindri-src-", ".java");
+            temp.toFile().deleteOnExit();
+            java.nio.file.Files.copy(
+                    in, temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String path = temp.toString();
+            classpathSourceCache.put(fqn, path);
+
+            return path;
+        } catch (java.io.IOException e) {
+            classpathSourceCache.put(fqn, "");
+            return "";
+        }
     }
 }

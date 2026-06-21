@@ -39,4 +39,6 @@ public interface HttpRouteDataContract {
     boolean isDynamic();
 
     List<? extends HttpParameterDataContract> parameters();
+
+    String regex();
 }
