@@ -30,11 +30,15 @@ final class HttpRouteParameterReaderTest {
     private final HttpRouteParameterReader reader = new HttpRouteParameterReader();
 
     private List<HttpParameterData> read(String annotations) {
+        return read(annotations, IMPORTS);
+    }
+
+    private List<HttpParameterData> read(String annotations, Map<String, String> imports) {
         MethodDeclaration method =
                 StaticJavaParser.parse("class C { " + annotations + " void m() {} }")
                         .findFirst(MethodDeclaration.class)
                         .orElseThrow();
-        return reader.updateParameters(method, IMPORTS, "app");
+        return reader.updateParameters(method, imports, "app");
     }
 
     @Test
@@ -122,5 +126,47 @@ final class HttpRouteParameterReaderTest {
 
         assertEquals(1, params.size());
         assertEquals("only", params.get(0).name());
+    }
+
+    @Test
+    void ignoresUnknownParameterMember() {
+        assertEquals("1", read("@Parameter(name = \"x\", regex = \"1\", bogus = \"y\")").get(0).regex());
+    }
+
+    @Test
+    void nonBooleanFlagDefaultsToFalse() {
+        assertFalse(read("@Parameter(name = \"x\", isOptional = SOMETHING)").get(0).isOptional());
+    }
+
+    @Test
+    void markerParametersContainerYieldsNothing() {
+        assertTrue(read("@Parameters").isEmpty());
+    }
+
+    @Test
+    void parametersContainerWithNonValueMemberYieldsNothing() {
+        assertTrue(read("@Parameters(bogus = {@Parameter(name = \"a\", regex = \"1\")})").isEmpty());
+    }
+
+    @Test
+    void parametersContainerArraySkipsNonAnnotationItems() {
+        assertTrue(read("@Parameters({\"x\"})").isEmpty());
+    }
+
+    @Test
+    void parametersContainerWithNonAnnotationValueYieldsNothing() {
+        assertTrue(read("@Parameters(\"x\")").isEmpty());
+    }
+
+    @Test
+    void nullConstantRegexResolvesToEmpty() {
+        Map<String, String> imports =
+                Map.of("NullRegexConstant", "io.sindri.tests.classes.NullRegexConstant");
+
+        assertEquals(
+                "",
+                read("@Parameter(name = \"x\", regex = NullRegexConstant.VALUE)", imports)
+                        .get(0)
+                        .regex());
     }
 }

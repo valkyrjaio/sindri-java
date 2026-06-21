@@ -210,12 +210,15 @@ public abstract class GenerateDataFromAst {
         }
 
         String resource = fqn.replace('.', '/') + ".java";
-        try (java.io.InputStream in = getClass().getClassLoader().getResourceAsStream(resource)) {
-            if (in == null) {
-                classpathSourceCache.put(fqn, "");
-                return "";
-            }
+        java.io.InputStream in = getClass().getClassLoader().getResourceAsStream(resource);
+        if (in == null) {
+            classpathSourceCache.put(fqn, "");
+            return "";
+        }
 
+        // A plain try/catch (rather than try-with-resources) keeps both outcomes fully reachable;
+        // stageSource owns closing the stream.
+        try {
             String path = stageSource(in);
             classpathSourceCache.put(fqn, path);
 
@@ -226,11 +229,12 @@ public abstract class GenerateDataFromAst {
         }
     }
 
-    /** Copy a resolved source stream to a temp file and return its path. */
+    /** Copy a resolved source stream to a temp file, closing the stream, and return its path. */
     protected String stageSource(java.io.InputStream in) throws java.io.IOException {
         java.nio.file.Path temp = java.nio.file.Files.createTempFile("sindri-src-", ".java");
         temp.toFile().deleteOnExit();
         java.nio.file.Files.copy(in, temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        in.close();
 
         return temp.toString();
     }
