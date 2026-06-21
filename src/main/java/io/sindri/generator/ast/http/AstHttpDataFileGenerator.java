@@ -179,7 +179,8 @@ public class AstHttpDataFileGenerator extends AstFileGenerator
         List<String> methodEntries = new ArrayList<>();
         for (Map.Entry<String, Map<String, String>> methodEntry : methodToMap.entrySet()) {
             String innerMap = buildInnerPathMap(methodEntry.getValue());
-            methodEntries.add("            Map.entry(\"" + methodEntry.getKey() + "\", " + innerMap + ")");
+            methodEntries.add(
+                    "            Map.entry(\"" + methodEntry.getKey() + "\", " + innerMap + ")");
         }
 
         StringBuilder sb = new StringBuilder("        return Map.ofEntries(\n");

@@ -26,8 +26,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Reads {@code @Parameter} / {@code @Parameters} annotations off an HTTP controller method into
- * {@link HttpParameterData}. A parameter's {@code regex} may be a string literal or a reference to a
- * {@code Regex} constant (e.g. {@code Regex.ALPHA}); the latter is resolved to its value by
+ * {@link HttpParameterData}. A parameter's {@code regex} may be a string literal or a reference to
+ * a {@code Regex} constant (e.g. {@code Regex.ALPHA}); the latter is resolved to its value by
  * reflecting the constant off the classpath, mirroring what the framework sees at runtime.
  */
 public class HttpRouteParameterReader extends AstReader
@@ -92,16 +92,18 @@ public class HttpRouteParameterReader extends AstReader
         return new HttpParameterData(name, regex, null, isOptional, shouldCapture);
     }
 
-    /** Resolve a parameter regex: a string literal directly, or a {@code Regex.*} constant value. */
-    protected String resolveRegexValue(
-            Expression expr, Map<String, String> importMap, String pkg) {
+    /**
+     * Resolve a parameter regex: a string literal directly, or a {@code Regex.*} constant value.
+     */
+    protected String resolveRegexValue(Expression expr, Map<String, String> importMap, String pkg) {
         if (expr.isStringLiteralExpr()) {
             return expr.asStringLiteralExpr().getValue();
         }
 
         if (expr.isFieldAccessExpr()) {
             String fqn =
-                    resolveClassName(expr.asFieldAccessExpr().getScope().toString(), importMap, pkg);
+                    resolveClassName(
+                            expr.asFieldAccessExpr().getScope().toString(), importMap, pkg);
             return reflectStaticStringField(fqn, expr.asFieldAccessExpr().getNameAsString());
         }
 

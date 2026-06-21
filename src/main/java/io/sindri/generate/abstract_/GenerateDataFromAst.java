@@ -210,18 +210,13 @@ public abstract class GenerateDataFromAst {
         }
 
         String resource = fqn.replace('.', '/') + ".java";
-        try (java.io.InputStream in =
-                getClass().getClassLoader().getResourceAsStream(resource)) {
+        try (java.io.InputStream in = getClass().getClassLoader().getResourceAsStream(resource)) {
             if (in == null) {
                 classpathSourceCache.put(fqn, "");
                 return "";
             }
 
-            java.nio.file.Path temp = java.nio.file.Files.createTempFile("sindri-src-", ".java");
-            temp.toFile().deleteOnExit();
-            java.nio.file.Files.copy(
-                    in, temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            String path = temp.toString();
+            String path = stageSource(in);
             classpathSourceCache.put(fqn, path);
 
             return path;
@@ -229,5 +224,14 @@ public abstract class GenerateDataFromAst {
             classpathSourceCache.put(fqn, "");
             return "";
         }
+    }
+
+    /** Copy a resolved source stream to a temp file and return its path. */
+    protected String stageSource(java.io.InputStream in) throws java.io.IOException {
+        java.nio.file.Path temp = java.nio.file.Files.createTempFile("sindri-src-", ".java");
+        temp.toFile().deleteOnExit();
+        java.nio.file.Files.copy(in, temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+        return temp.toString();
     }
 }

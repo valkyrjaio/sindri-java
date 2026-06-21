@@ -185,7 +185,9 @@ public class HttpRouteAttributeReader extends AstReader
         return StaticJavaParser.parseExpression(head + tail);
     }
 
-    /** Emit {@code List.of(new Parameter("name", "regex"), ...)} mirroring the framework collector. */
+    /**
+     * Emit {@code List.of(new Parameter("name", "regex"), ...)} mirroring the framework collector.
+     */
     private String buildParameterList(List<HttpParameterData> parameters) {
         StringBuilder sb = new StringBuilder("java.util.List.of(");
         for (int i = 0; i < parameters.size(); i++) {
@@ -205,9 +207,11 @@ public class HttpRouteAttributeReader extends AstReader
 
     /**
      * Precompute a dynamic route's match regex by running the real framework {@link
-     * io.valkyrja.http.routing.processor.Processor}, so the cached regex is always identical to what
-     * the framework would compute at runtime.
+     * io.valkyrja.http.routing.processor.Processor}, so the cached regex is always identical to
+     * what the framework would compute at runtime.
      */
+    @SuppressWarnings(
+            "NullAway") // throwaway route used only to compute the regex; handler is unused
     private String computeRegex(String path, String name, List<HttpParameterData> parameters) {
         List<io.valkyrja.http.routing.data.contract.ParameterContract> dataParameters =
                 new java.util.ArrayList<>();
@@ -220,18 +224,16 @@ public class HttpRouteAttributeReader extends AstReader
         try {
             io.valkyrja.http.routing.data.DynamicRoute route =
                     new io.valkyrja.http.routing.data.DynamicRoute(
-                            path, name, "", dataParameters, (container, matched) -> null);
+                            path, name, "", dataParameters, null);
             io.valkyrja.http.routing.data.contract.RouteContract processed =
                     new io.valkyrja.http.routing.processor.Processor().route(route);
-            if (processed
-                    instanceof io.valkyrja.http.routing.data.contract.DynamicRouteContract dynamic) {
-                return dynamic.getRegex();
-            }
+
+            return ((io.valkyrja.http.routing.data.contract.DynamicRouteContract) processed)
+                    .getRegex();
         } catch (RuntimeException e) {
             // Malformed dynamic route (e.g. a parameter with no matching placeholder) — skip it.
+            return "";
         }
-
-        return "";
     }
 
     private String escapeJava(String value) {

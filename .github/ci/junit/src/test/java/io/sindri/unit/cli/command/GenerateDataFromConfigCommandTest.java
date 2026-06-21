@@ -10,6 +10,7 @@
 package io.sindri.unit.cli.command;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -231,6 +232,22 @@ final class GenerateDataFromConfigCommandTest {
                     @Parameter(name = "value", regex = Regex.ALPHA)
                     @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void show() {}
+
+                    @Route(path = "/pair/{a}/{b}", name = "pair")
+                    @Parameter(name = "a", regex = Regex.ALPHA)
+                    @Parameter(name = "b", regex = Regex.NUM)
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void pair() {}
+
+                    @Route(path = "/multi", name = "multi",
+                            requestMethods = {RequestMethod.GET, RequestMethod.POST})
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void multi() {}
+
+                    @Route(path = "/bad/{x}", name = "bad")
+                    @Parameter(name = "y", regex = Regex.NUM)
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void bad() {}
                 }
                 """);
 
@@ -374,6 +391,27 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 container.contains("app.AppServiceProvider::publishAppService"),
                 () -> "app service publisher missing from callbacks:\n" + container);
+    }
+
+    @Test
+    void resolveSourceFromClasspathReturnsEmptyOnIoError() {
+        var container = new Container();
+        container.setSingleton(OutputFactoryContract.class, new OutputFactory());
+        var route = mock(RouteContract.class);
+        var command =
+                new GenerateDataFromConfigCommand(container, route) {
+                    @Override
+                    protected String stageSource(java.io.InputStream in) throws java.io.IOException {
+                        throw new java.io.IOException("boom");
+                    }
+
+                    String resolve(String fqn) {
+                        return resolveSourceFromClasspath(fqn);
+                    }
+                };
+
+        // The resource resolves from the classpath, but staging it to a temp file fails.
+        assertEquals("", command.resolve("vendor.FrameworkComponentProvider"));
     }
 
     @Test
