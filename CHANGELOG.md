@@ -1,6 +1,12 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.1.1...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.1.2...26.x)
+
+## [v26.1.2](https://github.com/valkyrjaio/sindri-java/compare/v26.1.1...v26.1.2) - 2026-06-21
+
+* [GitHub] Update .github workflow refs to v26.9.6 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/29
+* [GitHub] Update .github workflow refs to v26.9.7 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/30
+* [Generation] Fix HTTP routing data and framework-provider resolution by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/31
 
 ## [v26.1.1](https://github.com/valkyrjaio/sindri-java/compare/v26.1.0...v26.1.1) - 2026-06-20
 
