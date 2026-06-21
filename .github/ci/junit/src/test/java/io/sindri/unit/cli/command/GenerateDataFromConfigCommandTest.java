@@ -9,6 +9,9 @@
 
 package io.sindri.unit.cli.command;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -72,7 +75,10 @@ final class GenerateDataFromConfigCommandTest {
 
                 public final class AppComponentProvider {
                     public List<Object> getComponentProviders(Object app) {
-                        return List.of(new AppNestedComponentProvider(), new ext.Ext());
+                        return List.of(
+                                new AppNestedComponentProvider(),
+                                new vendor.FrameworkComponentProvider(),
+                                new ext.Ext());
                     }
 
                     public List<Object> getContainerProviders(Object app) {
@@ -208,13 +214,40 @@ final class GenerateDataFromConfigCommandTest {
                 package app;
 
                 import io.valkyrja.http.message.enum_.RequestMethod;
+                import io.valkyrja.http.routing.attribute.Parameter;
                 import io.valkyrja.http.routing.attribute.Route;
                 import io.valkyrja.http.routing.attribute.route.RouteHandler;
+                import io.valkyrja.http.routing.constant.Regex;
 
                 public class AppHttpController {
                     @Route(path = "/test", name = "test.get", requestMethods = {RequestMethod.GET})
                     @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void get() {}
+
+                    @Route(path = "/welcome", name = "welcome")
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void welcome() {}
+
+                    @Route(path = "/show/{value}", name = "show")
+                    @Parameter(name = "value", regex = Regex.ALPHA)
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void show() {}
+
+                    @Route(path = "/pair/{a}/{b}", name = "pair")
+                    @Parameter(name = "a", regex = Regex.ALPHA)
+                    @Parameter(name = "b", regex = Regex.NUM)
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void pair() {}
+
+                    @Route(path = "/multi", name = "multi",
+                            requestMethods = {RequestMethod.GET, RequestMethod.POST})
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void multi() {}
+
+                    @Route(path = "/bad/{x}", name = "bad")
+                    @Parameter(name = "y", regex = Regex.NUM)
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void bad() {}
                 }
                 """);
 
@@ -248,6 +281,165 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(Files.exists(dataDir.resolve("AppEventData.java")));
         assertTrue(Files.exists(dataDir.resolve("AppCliRoutingData.java")));
         assertTrue(Files.exists(dataDir.resolve("AppHttpRoutingData.java")));
+    }
+
+    @Test
+    void generatesExpectedHttpRoutingContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String http =
+                Files.readString(appDir.resolve("data").resolve("AppHttpRoutingData.java"));
+
+        // routes() must build a real Supplier<RouteContract> — a Route constructor with the
+        // handler method reference — not a bare route-name placeholder (the original bug).
+        assertTrue(
+                http.contains(
+                        "\"test.get\", () -> new io.valkyrja.http.routing.data.Route(\"/test\","
+                                + " \"test.get\", app.AppHttpRouteProvider::getHandler,"),
+                () -> "GET route supplier missing/incorrect:\n" + http);
+        assertTrue(
+                http.contains("io.valkyrja.http.message.enum_.RequestMethod.GET"),
+                () -> "GET request method missing:\n" + http);
+        // A route with no requestMethods uses the three-arg Route constructor (HEAD + GET default).
+        assertTrue(
+                http.contains(
+                        "\"welcome\", () -> new io.valkyrja.http.routing.data.Route(\"/welcome\","
+                                + " \"welcome\", app.AppHttpRouteProvider::getHandler)"),
+                () -> "default-methods route supplier missing/incorrect:\n" + http);
+        // The bare-identifier placeholder must never appear as a route value.
+        assertFalse(
+                http.contains("\"test.get\", test.get"),
+                () -> "route value is still a bare name placeholder:\n" + http);
+
+        // paths() must include HEAD for the default-methods route (matches PHP), not drop it.
+        assertTrue(http.contains("Map.entry(\"HEAD\""), () -> "HEAD path entry missing:\n" + http);
+        assertTrue(http.contains("Map.entry(\"GET\""), () -> "GET path entry missing:\n" + http);
+        assertTrue(
+                http.contains("\"/welcome\", \"welcome\""),
+                () -> "welcome path mapping missing:\n" + http);
+    }
+
+    @Test
+    void generatesExpectedDynamicRouteContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String http =
+                Files.readString(appDir.resolve("data").resolve("AppHttpRoutingData.java"));
+
+        // A {placeholder} route becomes a DynamicRoute supplier...
+        assertTrue(
+                http.contains(
+                        "\"show\", () -> new io.valkyrja.http.routing.data.DynamicRoute(\"/show/{value}\","
+                                + " \"show\","),
+                () -> "dynamic route supplier missing/incorrect:\n" + http);
+        // ...with its Parameter regex resolved from the Regex.ALPHA constant ([a-zA-Z]+)...
+        assertTrue(
+                http.contains(
+                        "new io.valkyrja.http.routing.data.Parameter(\"value\", \"[a-zA-Z]+\")"),
+                () -> "parameter regex not resolved from Regex constant:\n" + http);
+        // ...and the full match regex precomputed by the framework Processor.
+        assertTrue(
+                http.contains("(?<value>[a-zA-Z]+)"),
+                () -> "computed route regex missing:\n" + http);
+
+        // dynamicPaths() maps the dynamic path to its route name.
+        assertTrue(
+                http.contains("\"/show/{value}\", \"show\""),
+                () -> "dynamicPaths entry missing:\n" + http);
+
+        // regexes() must be populated (not the empty Map.of() default). It is the last method, so
+        // everything from its declaration to EOF is its body.
+        String regexesBlock = http.substring(http.indexOf("regexes()"));
+        assertTrue(
+                regexesBlock.contains("(?<value>[a-zA-Z]+)"),
+                () -> "regexes() not populated:\n" + http);
+
+        // The whole file must be syntactically valid Java — catches malformed suppliers or bad
+        // regex/string escaping that substring checks would miss.
+        assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(http));
+    }
+
+    @Test
+    void generatesExpectedContainerContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String container =
+                Files.readString(appDir.resolve("data").resolve("AppContainerData.java"));
+
+        // The app service provider's publisher must be collected into callbacks().
+        assertTrue(
+                container.contains("app.AppServiceProvider::publishAppService"),
+                () -> "app service publisher missing from callbacks:\n" + container);
+    }
+
+    @Test
+    void resolveSourceFromClasspathReturnsEmptyOnIoError() {
+        var container = new Container();
+        container.setSingleton(OutputFactoryContract.class, new OutputFactory());
+        var route = mock(RouteContract.class);
+        var command =
+                new GenerateDataFromConfigCommand(container, route) {
+                    @Override
+                    protected String stageSource(java.io.InputStream in) throws java.io.IOException {
+                        throw new java.io.IOException("boom");
+                    }
+
+                    String resolve(String fqn) {
+                        return resolveSourceFromClasspath(fqn);
+                    }
+                };
+
+        // The resource resolves from the classpath, but staging it to a temp file fails.
+        assertEquals("", command.resolve("vendor.FrameworkComponentProvider"));
+    }
+
+    @Test
+    void resolvesFrameworkProvidersFromClasspath(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String container =
+                Files.readString(appDir.resolve("data").resolve("AppContainerData.java"));
+
+        // The framework component provider lives outside the app namespace and is resolved from the
+        // classpath (sources-jar fallback); its publisher must end up in callbacks().
+        assertTrue(
+                container.contains("vendor.FrameworkServiceProvider::publishFrameworkService"),
+                () -> "framework provider publisher missing (classpath resolution failed):\n"
+                        + container);
+        // ...and a second-level framework provider proves the recursion goes deeper than one level.
+        assertTrue(
+                container.contains(
+                        "vendor.FrameworkNestedServiceProvider::publishFrameworkNestedService"),
+                () -> "deeply-nested framework provider publisher missing (recursion too shallow):\n"
+                        + container);
     }
 
     @Test

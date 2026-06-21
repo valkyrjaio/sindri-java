@@ -26,13 +26,14 @@ public record HttpRouteData(
         @Nullable String requestStruct,
         @Nullable String responseStruct,
         boolean isDynamic,
-        List<HttpParameterData> parameters)
+        List<HttpParameterData> parameters,
+        String regex)
         implements HttpRouteDataContract {
 
     public HttpRouteData(String path, String name) {
         this(
                 path, name, null, List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                null, null, false, List.of());
+                null, null, false, List.of(), "");
     }
 
     public HttpRouteData(String path, String name, List<String> requestMethods) {
@@ -49,6 +50,7 @@ public record HttpRouteData(
                 null,
                 null,
                 false,
-                List.of());
+                List.of(),
+                "");
     }
 }

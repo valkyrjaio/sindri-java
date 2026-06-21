@@ -120,14 +120,16 @@ public class AstHttpDataFileGeneratorTest {
     }
 
     @Test
-    void generateFile_withHeadOnlyRoute_excludesFromPaths(@TempDir Path tempDir) throws IOException {
+    void generateFile_withHeadRoute_includesInPaths(@TempDir Path tempDir) throws IOException {
         var routes = Map.of("head.only", "fixtures.provider.Provider::headHandler");
         var routeData = Map.of("head.only", new HttpRouteData("/head-only", "head.only", List.of("HEAD")));
 
         generator.generateFile(tempDir.toString(), "AppHttpRoutingData", "test.data", routes, routeData);
 
         String content = Files.readString(tempDir.resolve("AppHttpRoutingData.java"));
-        assertFalse(content.contains("\"/head-only\""));
+        // HEAD paths are included (matches PHP output), not dropped.
+        assertTrue(content.contains("\"/head-only\""));
+        assertTrue(content.contains("Map.entry(\"HEAD\""));
     }
 
     @Test
