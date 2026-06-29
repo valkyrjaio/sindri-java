@@ -22,7 +22,7 @@ public class ServiceProviderReaderTest {
     private final ServiceProviderReader reader = new ServiceProviderReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
@@ -30,16 +30,16 @@ public class ServiceProviderReaderTest {
         ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestServiceProviderClass.java"));
 
         assertEquals(1, result.publishers().size());
-        assertTrue(result.publishers().containsKey("io.sindri.tests.classes.container.TestService"));
+        assertTrue(result.publishers().containsKey("io.sindri.tests.fixtures.container.TestService"));
     }
 
     @Test
     void readFile_parsesProviderAndMethod() {
         ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestServiceProviderClass.java"));
 
-        String[] ref = result.publishers().get("io.sindri.tests.classes.container.TestService");
+        String[] ref = result.publishers().get("io.sindri.tests.fixtures.container.TestService");
         assertArrayEquals(
-                new String[]{"io.sindri.tests.classes.container.provider.TestServiceProviderClass", "publishTestService"},
+                new String[]{"io.sindri.tests.fixtures.container.provider.TestServiceProviderClass", "publishTestService"},
                 ref);
     }
 
@@ -79,10 +79,10 @@ public class ServiceProviderReaderTest {
         ServiceProviderResult result = reader.readFile(fixturePath("Container/Provider/TestOfEntriesServiceProviderClass.java"));
 
         assertEquals(1, result.publishers().size());
-        assertTrue(result.publishers().containsKey("io.sindri.tests.classes.container.TestService"));
-        String[] ref = result.publishers().get("io.sindri.tests.classes.container.TestService");
+        assertTrue(result.publishers().containsKey("io.sindri.tests.fixtures.container.TestService"));
+        String[] ref = result.publishers().get("io.sindri.tests.fixtures.container.TestService");
         assertArrayEquals(
-                new String[]{"io.sindri.tests.classes.container.provider.TestOfEntriesServiceProviderClass", "publish"},
+                new String[]{"io.sindri.tests.fixtures.container.provider.TestOfEntriesServiceProviderClass", "publish"},
                 ref);
     }
 

@@ -161,7 +161,7 @@ final class HttpRouteParameterReaderTest {
     @Test
     void nullConstantRegexResolvesToEmpty() {
         Map<String, String> imports =
-                Map.of("NullRegexConstant", "io.sindri.tests.classes.NullRegexConstant");
+                Map.of("NullRegexConstant", "io.sindri.tests.fixtures.NullRegexConstant");
 
         assertEquals(
                 "",

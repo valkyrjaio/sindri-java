@@ -35,7 +35,7 @@ public class AstReaderTest {
     private final ServiceProviderReader reader = new ServiceProviderReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test

@@ -21,7 +21,7 @@ public class ListenerProviderReaderTest {
     private final ListenerProviderReader reader = new ListenerProviderReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
