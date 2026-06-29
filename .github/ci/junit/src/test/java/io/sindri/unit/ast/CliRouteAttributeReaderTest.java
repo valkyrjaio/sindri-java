@@ -53,4 +53,28 @@ public class CliRouteAttributeReaderTest {
         assertTrue(result.routes().isEmpty());
     }
 
+    @Test
+    void readFile_buildsRouteSupplierWithHandler() {
+        CliRouteAttributeResult result =
+                reader.readFile(fixturePath("Cli/Controller/TestCliControllerClass.java"));
+
+        String supplier = result.routes().get("greet").toString();
+        assertTrue(supplier.contains("() -> new io.valkyrja.cli.routing.data.Route(\"greet\","));
+        assertTrue(
+                supplier.contains(
+                        "io.sindri.tests.classes.cli.provider.TestCliRouteProviderClass::greetHandler"));
+    }
+
+    @Test
+    void readFile_edgeRoutes_handlerlessAndUnknownMembers() {
+        CliRouteAttributeResult result =
+                reader.readFile(fixturePath("Cli/Controller/TestCliEdgeRoutesControllerClass.java"));
+
+        assertEquals(3, result.routes().size());
+        // No @RouteHandler → the supplier uses a null handler.
+        assertTrue(result.routes().get("nohandler").toString().contains(", null)"));
+        assertTrue(result.routes().get("weird").toString().contains("greetHandler"));
+        // Marker @RouteHandler (not a NormalAnnotationExpr) → null handler too.
+        assertTrue(result.routes().get("marker").toString().contains(", null)"));
+    }
 }

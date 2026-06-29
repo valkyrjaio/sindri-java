@@ -9,6 +9,8 @@
 
 package io.sindri.generate.abstract_;
 
+import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.FieldAccessExpr;
 import io.sindri.ast.CliRouteAttributeReader;
 import io.sindri.ast.ComponentProviderReader;
 import io.sindri.ast.ConfigReader;
@@ -158,6 +160,15 @@ public abstract class GenerateDataFromAst {
                     result.routes().forEach((name, expr) -> routes.put(name, expr.toString()));
                 }
             }
+
+            // Manually-defined provider routes (getRoutes()) — the CLI Route's name is its first
+            // constructor argument.
+            for (Expression routeExpr : routeProvider.routes()) {
+                String name = extractRouteArgString(routeExpr, 0);
+                if (!name.isEmpty()) {
+                    routes.put(name, "() -> " + routeExpr);
+                }
+            }
         }
         return routes;
     }
@@ -183,7 +194,60 @@ public abstract class GenerateDataFromAst {
                     httpRouteData.putAll(result.routeData());
                 }
             }
+
+            // Manually-defined provider routes (getRoutes()) are inlined too, so the cached data
+            // holds every route and the runtime never has to iterate providers.
+            for (Expression routeExpr : routeProvider.routes()) {
+                String name = extractRouteArgString(routeExpr, 1);
+                if (name.isEmpty()) {
+                    continue;
+                }
+                httpRoutes.put(name, "() -> " + routeExpr);
+                httpRouteData.put(name, buildHttpRouteDataFromExpr(routeExpr, name));
+            }
         }
+    }
+
+    private String extractRouteArgString(Expression routeExpr, int index) {
+        // Callers only pass object-creation route expressions (RouteProviderReader filters them).
+        var arguments = routeExpr.asObjectCreationExpr().getArguments();
+        if (index < arguments.size() && arguments.get(index).isStringLiteralExpr()) {
+            return arguments.get(index).asStringLiteralExpr().getValue();
+        }
+        return "";
+    }
+
+    private HttpRouteData buildHttpRouteDataFromExpr(Expression routeExpr, String name) {
+        String path = extractRouteArgString(routeExpr, 0);
+        boolean isDynamic = path.contains("{");
+        String regex = isDynamic ? extractRouteArgString(routeExpr, 2) : "";
+
+        return new HttpRouteData(
+                path,
+                name,
+                null,
+                extractRequestMethodsFromExpr(routeExpr),
+                java.util.List.of(),
+                java.util.List.of(),
+                java.util.List.of(),
+                java.util.List.of(),
+                java.util.List.of(),
+                null,
+                null,
+                isDynamic,
+                java.util.List.of(),
+                regex);
+    }
+
+    /** Pull RequestMethod constants out of a route expression, defaulting to HEAD + GET. */
+    private java.util.List<String> extractRequestMethodsFromExpr(Expression routeExpr) {
+        java.util.List<String> methods = new java.util.ArrayList<>();
+        for (FieldAccessExpr fieldAccess : routeExpr.findAll(FieldAccessExpr.class)) {
+            if (fieldAccess.getScope().toString().endsWith("RequestMethod")) {
+                methods.add(fieldAccess.getNameAsString());
+            }
+        }
+        return methods.isEmpty() ? java.util.List.of("HEAD", "GET") : methods;
     }
 
     private String fqnToFilePath(String fqn, String namespace, String srcDir) {
