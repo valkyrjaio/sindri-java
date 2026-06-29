@@ -21,7 +21,7 @@ public class CliRouteAttributeReaderTest {
     private final CliRouteAttributeReader reader = new CliRouteAttributeReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
@@ -62,7 +62,7 @@ public class CliRouteAttributeReaderTest {
         assertTrue(supplier.contains("() -> new io.valkyrja.cli.routing.data.Route(\"greet\","));
         assertTrue(
                 supplier.contains(
-                        "io.sindri.tests.classes.cli.provider.TestCliRouteProviderClass::greetHandler"));
+                        "io.sindri.tests.fixtures.cli.provider.TestCliRouteProviderClass::greetHandler"));
     }
 
     @Test

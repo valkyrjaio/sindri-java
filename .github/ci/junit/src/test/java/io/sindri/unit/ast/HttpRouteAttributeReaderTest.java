@@ -27,7 +27,7 @@ public class HttpRouteAttributeReaderTest {
     private final HttpRouteAttributeReader reader = new HttpRouteAttributeReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
@@ -46,7 +46,7 @@ public class HttpRouteAttributeReaderTest {
         assertEquals("/test", getRoute.path());
         assertEquals(List.of("GET"), getRoute.requestMethods());
         assertNotNull(getRoute.handler());
-        assertEquals("io.sindri.tests.classes.http.provider.TestHttpRouteProviderClass", getRoute.handler().handlerClass());
+        assertEquals("io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderClass", getRoute.handler().handlerClass());
         assertEquals("getHandler", getRoute.handler().method());
     }
 

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 final class ConfigReaderTest {
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
@@ -33,7 +33,7 @@ final class ConfigReaderTest {
         assertEquals("io.sindri.tests.data", result.dataNamespace());
         assertEquals(
                 java.util.List.of(
-                        "io.sindri.tests.classes.component.provider.TestComponentProviderClass"),
+                        "io.sindri.tests.fixtures.component.provider.TestComponentProviderClass"),
                 result.providers());
         assertTrue(result.dataPath().endsWith("/data"));
     }

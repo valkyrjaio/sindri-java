@@ -21,7 +21,7 @@ public class ComponentProviderReaderTest {
     private final ComponentProviderReader reader = new ComponentProviderReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
@@ -29,7 +29,7 @@ public class ComponentProviderReaderTest {
         ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
 
         assertEquals(1, data.serviceProviders().size());
-        assertEquals("io.sindri.tests.classes.container.provider.TestServiceProviderClass", data.serviceProviders().get(0));
+        assertEquals("io.sindri.tests.fixtures.container.provider.TestServiceProviderClass", data.serviceProviders().get(0));
     }
 
     @Test
@@ -37,7 +37,7 @@ public class ComponentProviderReaderTest {
         ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
 
         assertEquals(1, data.listenerProviders().size());
-        assertEquals("io.sindri.tests.classes.event.provider.TestListenerProviderClass", data.listenerProviders().get(0));
+        assertEquals("io.sindri.tests.fixtures.event.provider.TestListenerProviderClass", data.listenerProviders().get(0));
     }
 
     @Test
@@ -45,7 +45,7 @@ public class ComponentProviderReaderTest {
         ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
 
         assertEquals(1, data.httpRouteProviders().size());
-        assertEquals("io.sindri.tests.classes.http.provider.TestHttpRouteProviderClass", data.httpRouteProviders().get(0));
+        assertEquals("io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderClass", data.httpRouteProviders().get(0));
     }
 
     @Test

@@ -21,7 +21,7 @@ public class RouteProviderReaderTest {
     private final RouteProviderReader reader = new RouteProviderReader();
 
     private String fixturePath(String relative) {
-        return getClass().getClassLoader().getResource("Classes/" + relative).getPath();
+        return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
     }
 
     @Test
@@ -29,7 +29,7 @@ public class RouteProviderReaderTest {
         RouteProviderResult result = reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderClass.java"));
 
         assertEquals(1, result.controllerClasses().size());
-        assertEquals("io.sindri.tests.classes.http.controller.TestHttpControllerClass", result.controllerClasses().get(0));
+        assertEquals("io.sindri.tests.fixtures.http.controller.TestHttpControllerClass", result.controllerClasses().get(0));
     }
 
     @Test
@@ -75,7 +75,7 @@ public class RouteProviderReaderTest {
         assertTrue(first.contains("new io.valkyrja.http.routing.data.Route("));
         assertTrue(
                 first.contains(
-                        "io.sindri.tests.classes.http.provider.TestRoutesRouteProviderClass::h"));
+                        "io.sindri.tests.fixtures.http.provider.TestRoutesRouteProviderClass::h"));
         assertTrue(first.contains("io.valkyrja.http.message.enum_.RequestMethod.GET"));
         assertTrue(result.routes().get(2).toString().contains("Unmapped.VALUE"));
         assertTrue(result.routes().get(3).toString().contains("new UnmappedRoute("));
