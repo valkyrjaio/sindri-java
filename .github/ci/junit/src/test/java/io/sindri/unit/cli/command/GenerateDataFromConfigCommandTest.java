@@ -159,14 +159,21 @@ final class GenerateDataFromConfigCommandTest {
 
                 import java.util.List;
 
+                import io.valkyrja.cli.routing.data.Route;
+
                 public final class AppCliRouteProvider {
                     public List<Class<?>> getControllerClasses() {
                         return List.of(AppCliController.class, ext.Ext.class);
                     }
 
                     public List<Object> getRoutes() {
-                        return List.of();
+                        return List.of(
+                                new Route("manual-cli", "Manual", AppCliRouteProvider::run),
+                                // A non-string name (arg 0) cannot be keyed, so this is skipped.
+                                new Route(NoName.VALUE, "Skip", AppCliRouteProvider::run));
                     }
+
+                    public static void run(Object container, Object route) {}
                 }
                 """);
 
@@ -178,13 +185,27 @@ final class GenerateDataFromConfigCommandTest {
 
                 import java.util.List;
 
+                import io.valkyrja.http.message.enum_.RequestMethod;
+                import io.valkyrja.http.routing.data.DynamicRoute;
+                import io.valkyrja.http.routing.data.Route;
+
                 public final class AppHttpRouteProvider {
                     public List<Class<?>> getControllerClasses() {
                         return List.of(AppHttpController.class, ext.Ext.class);
                     }
 
                     public List<Object> getRoutes() {
-                        return List.of();
+                        return List.of(
+                                new Route("/manual", "manual", AppHttpRouteProvider::getHandler,
+                                        List.of(RequestMethod.PUT), List.of(), List.of(), List.of(),
+                                        List.of(), List.of(), null, null),
+                                new DynamicRoute("/manual/{id}", "manual.show",
+                                        "/^\\\\/manual\\\\/(?<id>\\\\d+)$/", List.of(),
+                                        AppHttpRouteProvider::getHandler),
+                                // A non-string name (arg 1) cannot be keyed, so this is skipped.
+                                new Route("/skip", NoName.VALUE, AppHttpRouteProvider::getHandler),
+                                // Too few arguments to read a name — also skipped.
+                                new Route("/one"));
                     }
 
                     public static void getHandler(Object container, Object route) {}
@@ -324,6 +345,20 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 http.contains("\"/welcome\", \"welcome\""),
                 () -> "welcome path mapping missing:\n" + http);
+
+        // A manually-defined provider getRoutes() route must be inlined (fully qualified) alongside
+        // the controller-annotation routes, and registered in paths() under its request method.
+        assertTrue(
+                http.contains(
+                        "\"manual\", () -> new io.valkyrja.http.routing.data.Route(\"/manual\","
+                                + " \"manual\", app.AppHttpRouteProvider::getHandler,"),
+                () -> "provider route not combined into routes():\n" + http);
+        assertTrue(
+                http.contains("io.valkyrja.http.message.enum_.RequestMethod.PUT"),
+                () -> "provider route methods not qualified:\n" + http);
+        assertTrue(
+                http.contains("Map.entry(\"PUT\", Map.of(\"/manual\", \"manual\"))"),
+                () -> "provider route not registered in paths():\n" + http);
     }
 
     @Test
@@ -391,6 +426,32 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 container.contains("app.AppServiceProvider::publishAppService"),
                 () -> "app service publisher missing from callbacks:\n" + container);
+    }
+
+    @Test
+    void generatesExpectedCliRoutingContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String cli = Files.readString(appDir.resolve("data").resolve("AppCliRoutingData.java"));
+
+        // Controller-annotation CLI route.
+        assertTrue(
+                cli.contains("\"greet\", () -> new io.valkyrja.cli.routing.data.Route(\"greet\","),
+                () -> "controller CLI route missing:\n" + cli);
+        // Manually-defined provider getRoutes() CLI route, combined and fully qualified.
+        assertTrue(
+                cli.contains(
+                        "\"manual-cli\", () -> new io.valkyrja.cli.routing.data.Route(\"manual-cli\","
+                                + " \"Manual\", app.AppCliRouteProvider::run)"),
+                () -> "provider CLI route not combined:\n" + cli);
+        assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(cli));
     }
 
     @Test

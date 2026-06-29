@@ -66,6 +66,41 @@ public class RouteProviderReaderTest {
     }
 
     @Test
+    void readFile_readsAndQualifiesProviderRoutes() {
+        RouteProviderResult result =
+                reader.readFile(fixturePath("Http/Provider/TestRoutesRouteProviderClass.java"));
+
+        assertEquals(4, result.routes().size());
+        String first = result.routes().get(0).toString();
+        assertTrue(first.contains("new io.valkyrja.http.routing.data.Route("));
+        assertTrue(
+                first.contains(
+                        "io.sindri.tests.classes.http.provider.TestRoutesRouteProviderClass::h"));
+        assertTrue(first.contains("io.valkyrja.http.message.enum_.RequestMethod.GET"));
+        assertTrue(result.routes().get(2).toString().contains("Unmapped.VALUE"));
+        assertTrue(result.routes().get(3).toString().contains("new UnmappedRoute("));
+    }
+
+    @Test
+    void readFile_providerWithoutGetRoutes_hasNoRoutes() {
+        RouteProviderResult result =
+                reader.readFile(
+                        fixturePath("Http/Provider/TestControllersOnlyRouteProviderClass.java"));
+
+        assertTrue(result.routes().isEmpty());
+    }
+
+    @Test
+    void readFile_noPackageProvider_qualifiesSelfClassWithoutPackage() {
+        RouteProviderResult result =
+                reader.readFile(fixturePath("Http/Provider/TestNoPackageRouteProviderClass.java"));
+
+        assertEquals(1, result.routes().size());
+        assertTrue(
+                result.routes().get(0).toString().contains("TestNoPackageRouteProviderClass::h"));
+    }
+
+    @Test
     void readFile_nonClassExprItem_isSkipped() {
         var reader =
                 new RouteProviderReader() {
