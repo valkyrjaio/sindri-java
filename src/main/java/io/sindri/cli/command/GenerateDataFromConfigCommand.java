@@ -13,10 +13,12 @@ import io.sindri.generate.abstract_.GenerateDataFromAst;
 import io.sindri.generator.ast.cli.AstCliDataFileGenerator;
 import io.sindri.generator.ast.container.AstContainerDataFileGenerator;
 import io.sindri.generator.ast.event.AstEventDataFileGenerator;
+import io.sindri.generator.ast.grpc.AstGrpcDataFileGenerator;
 import io.sindri.generator.ast.http.AstHttpDataFileGenerator;
 import io.sindri.generator.cli.contract.CliDataFileGeneratorContract;
 import io.sindri.generator.container.contract.ContainerDataFileGeneratorContract;
 import io.sindri.generator.event.contract.EventDataFileGeneratorContract;
+import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import io.sindri.generator.http.contract.HttpDataFileGeneratorContract;
 import io.valkyrja.cli.interaction.message.Message;
 import io.valkyrja.cli.interaction.output.contract.OutputContract;
@@ -52,6 +54,11 @@ public class GenerateDataFromConfigCommand extends GenerateDataFromAst {
     @Override
     protected HttpDataFileGeneratorContract getHttpDataFileGenerator() {
         return new AstHttpDataFileGenerator();
+    }
+
+    @Override
+    protected GrpcDataFileGeneratorContract getGrpcDataFileGenerator() {
+        return new AstGrpcDataFileGenerator();
     }
 
     public OutputContract execute() {

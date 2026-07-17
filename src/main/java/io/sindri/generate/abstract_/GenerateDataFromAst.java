@@ -14,6 +14,7 @@ import com.github.javaparser.ast.expr.FieldAccessExpr;
 import io.sindri.ast.CliRouteAttributeReader;
 import io.sindri.ast.ComponentProviderReader;
 import io.sindri.ast.ConfigReader;
+import io.sindri.ast.GrpcRouteAttributeReader;
 import io.sindri.ast.HttpRouteAttributeReader;
 import io.sindri.ast.ListenerProviderReader;
 import io.sindri.ast.RouteProviderReader;
@@ -22,11 +23,13 @@ import io.sindri.ast.data.HttpRouteData;
 import io.sindri.ast.data.result.CliRouteAttributeResult;
 import io.sindri.ast.data.result.ComponentProviderResult;
 import io.sindri.ast.data.result.ConfigResult;
+import io.sindri.ast.data.result.GrpcRouteAttributeResult;
 import io.sindri.ast.data.result.HttpRouteAttributeResult;
 import io.sindri.ast.data.result.RouteProviderResult;
 import io.sindri.generator.cli.contract.CliDataFileGeneratorContract;
 import io.sindri.generator.container.contract.ContainerDataFileGeneratorContract;
 import io.sindri.generator.event.contract.EventDataFileGeneratorContract;
+import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import io.sindri.generator.http.contract.HttpDataFileGeneratorContract;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,6 +44,8 @@ public abstract class GenerateDataFromAst {
     private final CliRouteAttributeReader cliRouteAttributeReader = new CliRouteAttributeReader();
     private final HttpRouteAttributeReader httpRouteAttributeReader =
             new HttpRouteAttributeReader();
+    private final GrpcRouteAttributeReader grpcRouteAttributeReader =
+            new GrpcRouteAttributeReader();
 
     /** FQN → staged temp source path (or "" when unresolvable) for classpath-resolved sources. */
     private final Map<String, String> classpathSourceCache = new java.util.HashMap<>();
@@ -52,6 +57,8 @@ public abstract class GenerateDataFromAst {
     protected abstract CliDataFileGeneratorContract getCliDataFileGenerator();
 
     protected abstract HttpDataFileGeneratorContract getHttpDataFileGenerator();
+
+    protected abstract GrpcDataFileGeneratorContract getGrpcDataFileGenerator();
 
     public void run(String configFilePath) {
         ConfigResult config = configReader.readFile(configFilePath);
@@ -71,6 +78,9 @@ public abstract class GenerateDataFromAst {
         Map<String, HttpRouteData> httpRouteData = new LinkedHashMap<>();
         collectHttpRoutes(allProviderData.httpRouteProviders(), config, httpRoutes, httpRouteData);
 
+        Map<String, String> grpcRoutes =
+                collectGrpcRoutes(allProviderData.grpcRouteProviders(), config);
+
         String dataClassName = "AppContainerData";
         String dataDir = config.dataPath();
         String dataNamespace = config.dataNamespace();
@@ -83,6 +93,8 @@ public abstract class GenerateDataFromAst {
         getHttpDataFileGenerator()
                 .generateFile(
                         dataDir, "AppHttpRoutingData", dataNamespace, httpRoutes, httpRouteData);
+        getGrpcDataFileGenerator()
+                .generateFile(dataDir, "AppGrpcRoutingData", dataNamespace, grpcRoutes);
     }
 
     private ComponentProviderResult collectProviderData(ConfigResult config) {
@@ -167,6 +179,37 @@ public abstract class GenerateDataFromAst {
                 String name = extractRouteArgString(routeExpr, 0);
                 if (!name.isEmpty()) {
                     routes.put(name, "() -> " + routeExpr);
+                }
+            }
+        }
+        return routes;
+    }
+
+    private Map<String, String> collectGrpcRoutes(
+            java.util.List<String> grpcRouteProviders, ConfigResult config) {
+        Map<String, String> routes = new LinkedHashMap<>();
+        for (String providerFqn : grpcRouteProviders) {
+            String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
+            if (filePath.isEmpty()) {
+                continue;
+            }
+            RouteProviderResult routeProvider = routeProviderReader.readFile(filePath);
+            for (String controllerFqn : routeProvider.controllerClasses()) {
+                String controllerPath =
+                        fqnToFilePath(controllerFqn, config.namespace(), config.dir());
+                if (!controllerPath.isEmpty()) {
+                    GrpcRouteAttributeResult result =
+                            grpcRouteAttributeReader.readFile(controllerPath);
+                    result.routes().forEach((method, expr) -> routes.put(method, expr.toString()));
+                }
+            }
+
+            // Manually-defined provider routes (getRoutes()) — the gRPC Route's fully-qualified
+            // method is its first constructor argument.
+            for (Expression routeExpr : routeProvider.routes()) {
+                String method = extractRouteArgString(routeExpr, 0);
+                if (!method.isEmpty()) {
+                    routes.put(method, "() -> " + routeExpr);
                 }
             }
         }
