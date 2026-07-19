@@ -44,7 +44,7 @@ dependencies {
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.0")
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
-    errorprone("com.uber.nullaway:nullaway:0.13.7")
+    errorprone("com.uber.nullaway:nullaway:0.13.8")
 }
 
 fun isNonStable(version: String): Boolean {
