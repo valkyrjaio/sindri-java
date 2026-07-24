@@ -49,21 +49,21 @@ public class GrpcRouteAttributeReader extends AstReader
                 pkg.isEmpty() ? type.getNameAsString() : pkg + "." + type.getNameAsString();
 
         for (MethodDeclaration method : type.getMethods()) {
-            NormalAnnotationExpr grpcMethod = findGrpcMethod(method);
-            if (grpcMethod == null) {
+            NormalAnnotationExpr methodAttribute = findMethodAttribute(method);
+            if (methodAttribute == null) {
                 continue;
             }
 
             String name = "";
             boolean clientStreaming = false;
             boolean serverStreaming = false;
-            for (MemberValuePair pair : grpcMethod.getPairs()) {
+            for (MemberValuePair pair : methodAttribute.getPairs()) {
                 switch (pair.getNameAsString()) {
                     case "name" ->
                             name =
                                     requireStringLiteral(
                                             pair.getValue(),
-                                            "@GrpcMethod(name)",
+                                            "@Method(name)",
                                             method.getNameAsString());
                     case "clientStreaming" -> clientStreaming = extractBoolean(pair.getValue());
                     case "serverStreaming" -> serverStreaming = extractBoolean(pair.getValue());
@@ -104,17 +104,15 @@ public class GrpcRouteAttributeReader extends AstReader
         return new GrpcRouteAttributeResult(routeMap, routeDataMap);
     }
 
-    /**
-     * Read the {@code service} value from the class-level {@code @GrpcService}, or "" if absent.
-     */
+    /** Read the {@code service} value from the class-level {@code @Service}, or "" if absent. */
     private String readServiceName(TypeDeclaration<?> type) {
         for (AnnotationExpr annotation : type.getAnnotations()) {
-            if (annotation.getNameAsString().equals("GrpcService")
+            if (annotation.getNameAsString().equals("Service")
                     && annotation instanceof NormalAnnotationExpr normal) {
                 for (MemberValuePair pair : normal.getPairs()) {
                     if (pair.getNameAsString().equals("service")) {
                         return requireStringLiteral(
-                                pair.getValue(), "@GrpcService(service)", type.getNameAsString());
+                                pair.getValue(), "@Service(service)", type.getNameAsString());
                     }
                 }
             }
@@ -146,10 +144,10 @@ public class GrpcRouteAttributeReader extends AstReader
         return expr.asStringLiteralExpr().asString();
     }
 
-    private @org.jspecify.annotations.Nullable NormalAnnotationExpr findGrpcMethod(
+    private @org.jspecify.annotations.Nullable NormalAnnotationExpr findMethodAttribute(
             MethodDeclaration method) {
         return method.getAnnotations().stream()
-                .filter(a -> a.getNameAsString().equals("GrpcMethod"))
+                .filter(a -> a.getNameAsString().equals("Method"))
                 .filter(a -> a instanceof NormalAnnotationExpr)
                 .map(a -> (NormalAnnotationExpr) a)
                 .findFirst()

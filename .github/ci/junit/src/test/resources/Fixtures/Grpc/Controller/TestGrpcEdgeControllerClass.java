@@ -4,24 +4,24 @@ import io.valkyrja.grpc.routing.attribute.GrpcMethod;
 import io.valkyrja.grpc.routing.attribute.GrpcService;
 
 // A non-"service" member (ordered first) exercises the service-name lookup's skip branch.
-@GrpcService(unused = "x", service = "pkg.Edge")
+@Service(unused = "x", service = "pkg.Edge")
 public class TestGrpcEdgeControllerClass {
 
-    // Marker @GrpcMethod (not a NormalAnnotationExpr) is skipped.
-    @GrpcMethod
+    // Marker @Method (not a NormalAnnotationExpr) is skipped.
+    @Method
     public Object marker(Object container, Object route) {
         return null;
     }
 
-    // @GrpcMethod with no name is skipped.
-    @GrpcMethod(clientStreaming = true)
+    // @Method with no name is skipped.
+    @Method(clientStreaming = true)
     public Object noName(Object container, Object route) {
         return null;
     }
 
     // An unknown member hits the default switch arm; an explicit false literal and a non-literal
     // streaming value exercise both boolean-extraction branches.
-    @GrpcMethod(name = "Valid", clientStreaming = false, serverStreaming = OTHER, unknown = "y")
+    @Method(name = "Valid", clientStreaming = false, serverStreaming = OTHER, unknown = "y")
     public Object valid(Object container, Object route) {
         return null;
     }

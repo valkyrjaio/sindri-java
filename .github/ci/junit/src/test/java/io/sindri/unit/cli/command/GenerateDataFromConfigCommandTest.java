@@ -313,14 +313,14 @@ final class GenerateDataFromConfigCommandTest {
                 import io.valkyrja.grpc.routing.attribute.GrpcMethod;
                 import io.valkyrja.grpc.routing.attribute.GrpcService;
 
-                @GrpcService(service = "app.Greeter")
+                @Service(service = "app.Greeter")
                 public class AppGrpcController {
-                    @GrpcMethod(name = "SayHello")
+                    @Method(name = "SayHello")
                     public Object sayHello(Object container, Object route) {
                         return null;
                     }
 
-                    @GrpcMethod(name = "StreamHellos", serverStreaming = true)
+                    @Method(name = "StreamHellos", serverStreaming = true)
                     public Object streamHellos(Object container, Object route) {
                         return null;
                     }

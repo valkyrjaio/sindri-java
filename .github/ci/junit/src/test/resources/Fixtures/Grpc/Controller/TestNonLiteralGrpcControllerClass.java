@@ -13,12 +13,12 @@ package io.sindri.tests.fixtures.grpc.controller;
  * Fixture whose service name is a constant reference rather than a string literal, which sindri
  * cannot resolve syntactically.
  */
-@GrpcService(service = SERVICE_NAME)
+@Service(service = SERVICE_NAME)
 public class TestNonLiteralGrpcControllerClass {
 
     public static final String SERVICE_NAME = "pkg.NonLiteral";
 
-    @GrpcMethod(name = "Ping")
+    @Method(name = "Ping")
     public ServiceResponseContract ping(ContainerContract container, RouteContract route) {
         return ServiceResponse.ok();
     }

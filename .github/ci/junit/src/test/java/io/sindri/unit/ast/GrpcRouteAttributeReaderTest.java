@@ -102,7 +102,7 @@ public class GrpcRouteAttributeReaderTest {
                 assertThrows(
                         RuntimeException.class,
                         () -> read("TestNonLiteralGrpcControllerClass.java"));
-        assertTrue(thrown.getMessage().contains("@GrpcService(service)"));
+        assertTrue(thrown.getMessage().contains("@Service(service)"));
         assertTrue(thrown.getMessage().contains("string literal"));
     }
 

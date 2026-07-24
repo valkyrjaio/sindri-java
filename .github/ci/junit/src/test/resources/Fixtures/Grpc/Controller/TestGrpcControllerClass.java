@@ -7,16 +7,16 @@ import io.valkyrja.grpc.routing.attribute.GrpcService;
 import io.valkyrja.grpc.routing.data.contract.RouteContract;
 
 @Deprecated
-@GrpcService(service = "pkg.Greeter")
+@Service(service = "pkg.Greeter")
 public class TestGrpcControllerClass {
 
     @Deprecated
-    @GrpcMethod(name = "SayHello")
+    @Method(name = "SayHello")
     public ServiceResponseContract sayHello(ContainerContract container, RouteContract route) {
         return null;
     }
 
-    @GrpcMethod(name = "StreamHellos", clientStreaming = true, serverStreaming = true)
+    @Method(name = "StreamHellos", clientStreaming = true, serverStreaming = true)
     public ServiceResponseContract streamHellos(ContainerContract container, RouteContract route) {
         return null;
     }
