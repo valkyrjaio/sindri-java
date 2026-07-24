@@ -22,6 +22,7 @@ import io.sindri.ast.contract.GrpcRouteAttributeReaderContract;
 import io.sindri.ast.data.GrpcRouteData;
 import io.sindri.ast.data.HandlerData;
 import io.sindri.ast.data.result.GrpcRouteAttributeResult;
+import io.sindri.ast.throwable.exception.NonLiteralAttributeValueException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -136,7 +137,7 @@ public class GrpcRouteAttributeReader extends AstReader
      */
     private String requireStringLiteral(Expression expr, String what, String where) {
         if (!expr.isStringLiteralExpr()) {
-            throw new RuntimeException(
+            throw new NonLiteralAttributeValueException(
                     "%s must be a string literal to be cached, but %s uses '%s'. Inline the literal or disable the gRPC route cache."
                             .formatted(what, where, expr));
         }

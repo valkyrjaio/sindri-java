@@ -32,6 +32,7 @@ import io.sindri.generator.enum_.GenerateStatus;
 import io.sindri.generator.event.contract.EventDataFileGeneratorContract;
 import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import io.sindri.generator.http.contract.HttpDataFileGeneratorContract;
+import io.sindri.generator.throwable.exception.DataFileWriteException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -125,7 +126,7 @@ public abstract class GenerateDataFromAst {
      */
     private void requireWritten(String dataClassName, GenerateStatus status) {
         if (status == GenerateStatus.FAILURE) {
-            throw new RuntimeException("Failed to write " + dataClassName + ".");
+            throw new DataFileWriteException("Failed to write " + dataClassName + ".");
         }
     }
 
