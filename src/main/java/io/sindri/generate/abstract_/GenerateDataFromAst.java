@@ -28,6 +28,7 @@ import io.sindri.ast.data.result.HttpRouteAttributeResult;
 import io.sindri.ast.data.result.RouteProviderResult;
 import io.sindri.generator.cli.contract.CliDataFileGeneratorContract;
 import io.sindri.generator.container.contract.ContainerDataFileGeneratorContract;
+import io.sindri.generator.enum_.GenerateStatus;
 import io.sindri.generator.event.contract.EventDataFileGeneratorContract;
 import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import io.sindri.generator.http.contract.HttpDataFileGeneratorContract;
@@ -85,16 +86,47 @@ public abstract class GenerateDataFromAst {
         String dataDir = config.dataPath();
         String dataNamespace = config.dataNamespace();
 
-        getContainerDataFileGenerator()
-                .generateFile(dataDir, dataClassName, dataNamespace, publishers);
-        getEventDataFileGenerator().generateFile(dataDir, "AppEventData", dataNamespace, listeners);
-        getCliDataFileGenerator()
-                .generateFile(dataDir, "AppCliRoutingData", dataNamespace, cliRoutes);
-        getHttpDataFileGenerator()
-                .generateFile(
-                        dataDir, "AppHttpRoutingData", dataNamespace, httpRoutes, httpRouteData);
-        getGrpcDataFileGenerator()
-                .generateFile(dataDir, "AppGrpcRoutingData", dataNamespace, grpcRoutes);
+        requireWritten(
+                dataClassName,
+                getContainerDataFileGenerator()
+                        .generateFile(dataDir, dataClassName, dataNamespace, publishers));
+        requireWritten(
+                "AppEventData",
+                getEventDataFileGenerator()
+                        .generateFile(dataDir, "AppEventData", dataNamespace, listeners));
+        requireWritten(
+                "AppCliRoutingData",
+                getCliDataFileGenerator()
+                        .generateFile(dataDir, "AppCliRoutingData", dataNamespace, cliRoutes));
+        requireWritten(
+                "AppHttpRoutingData",
+                getHttpDataFileGenerator()
+                        .generateFile(
+                                dataDir,
+                                "AppHttpRoutingData",
+                                dataNamespace,
+                                httpRoutes,
+                                httpRouteData));
+        requireWritten(
+                "AppGrpcRoutingData",
+                getGrpcDataFileGenerator()
+                        .generateFile(dataDir, "AppGrpcRoutingData", dataNamespace, grpcRoutes));
+    }
+
+    /**
+     * Fail loudly when a data file could not be written.
+     *
+     * <p>A discarded {@link GenerateStatus#FAILURE} leaves the previous generation's data class on
+     * disk (or none at all) while the build reports success — the application then boots against a
+     * stale route map. Surface it instead.
+     *
+     * @param dataClassName the data class being written, for the error message
+     * @param status the generator's result
+     */
+    private void requireWritten(String dataClassName, GenerateStatus status) {
+        if (status == GenerateStatus.FAILURE) {
+            throw new RuntimeException("Failed to write " + dataClassName + ".");
+        }
     }
 
     private ComponentProviderResult collectProviderData(ConfigResult config) {
