@@ -95,6 +95,18 @@ public class GrpcRouteAttributeReaderTest {
     }
 
     @Test
+    void readFile_withNonLiteralServiceName_throwsRatherThanCachingAGarbageKey() {
+        // Falling back to the expression source would cache "/SERVICE_NAME/Ping", a route that
+        // answers UNIMPLEMENTED only when the cache is enabled.
+        RuntimeException thrown =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> read("TestNonLiteralGrpcControllerClass.java"));
+        assertTrue(thrown.getMessage().contains("@GrpcService(service)"));
+        assertTrue(thrown.getMessage().contains("string literal"));
+    }
+
+    @Test
     void readFile_withNoTypeInFile_throws() {
         assertThrows(
                 RuntimeException.class,

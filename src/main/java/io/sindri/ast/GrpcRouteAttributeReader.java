@@ -59,7 +59,12 @@ public class GrpcRouteAttributeReader extends AstReader
             boolean serverStreaming = false;
             for (MemberValuePair pair : grpcMethod.getPairs()) {
                 switch (pair.getNameAsString()) {
-                    case "name" -> name = extractStringLiteral(pair.getValue());
+                    case "name" ->
+                            name =
+                                    requireStringLiteral(
+                                            pair.getValue(),
+                                            "@GrpcMethod(name)",
+                                            method.getNameAsString());
                     case "clientStreaming" -> clientStreaming = extractBoolean(pair.getValue());
                     case "serverStreaming" -> serverStreaming = extractBoolean(pair.getValue());
                     default -> {}
@@ -108,12 +113,37 @@ public class GrpcRouteAttributeReader extends AstReader
                     && annotation instanceof NormalAnnotationExpr normal) {
                 for (MemberValuePair pair : normal.getPairs()) {
                     if (pair.getNameAsString().equals("service")) {
-                        return extractStringLiteral(pair.getValue());
+                        return requireStringLiteral(
+                                pair.getValue(), "@GrpcService(service)", type.getNameAsString());
                     }
                 }
             }
         }
         return "";
+    }
+
+    /**
+     * Resolve an annotation value that must be a string literal.
+     *
+     * <p>Sindri parses source syntactically, so a non-literal (a constant reference, a
+     * concatenation) cannot be evaluated here. Falling back to the expression's source text would
+     * bake a route key like {@code /SERVICE_NAME/Method} into the cache — a route that silently
+     * answers {@code UNIMPLEMENTED}, and only when the cache is enabled. Fail at generation time
+     * instead, where the developer can see it.
+     *
+     * @param expr the annotation value
+     * @param what the annotation member being read, for the error message
+     * @param where the declaring type or method, for the error message
+     * @return the literal value
+     */
+    private String requireStringLiteral(Expression expr, String what, String where) {
+        if (!expr.isStringLiteralExpr()) {
+            throw new RuntimeException(
+                    "%s must be a string literal to be cached, but %s uses '%s'. Inline the literal or disable the gRPC route cache."
+                            .formatted(what, where, expr));
+        }
+
+        return expr.asStringLiteralExpr().asString();
     }
 
     private @org.jspecify.annotations.Nullable NormalAnnotationExpr findGrpcMethod(
