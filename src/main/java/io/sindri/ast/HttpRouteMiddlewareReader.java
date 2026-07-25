@@ -49,7 +49,7 @@ public class HttpRouteMiddlewareReader extends AstReader
     }
 
     @Override
-    public List<String> updateTerminatedMiddleware(
+    public List<String> updateResponseSentMiddleware(
             MethodDeclaration method, Map<String, String> importMap, String pkg) {
         return List.of();
     }

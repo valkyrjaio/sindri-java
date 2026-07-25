@@ -28,7 +28,7 @@ public interface CliRouteDataContract {
 
     List<String> throwableCaughtMiddleware();
 
-    List<String> exitedMiddleware();
+    List<String> processExitingMiddleware();
 
     List<? extends CliArgumentParameterDataContract> arguments();
 
