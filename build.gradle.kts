@@ -4,6 +4,8 @@ plugins {
     java
     application
     id("com.vanniktech.maven.publish") version "0.30.0"
+    id("com.github.ben-manes.versions") version "0.54.0"
+    id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
 group = "io.valkyrja"
@@ -30,6 +32,17 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
+}
+
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+    val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+    val isStable = stableKeyword || regex.matches(version)
+    return isStable.not()
+}
+
+tasks.named<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask>("dependencyUpdates") {
+    rejectVersionIf { isNonStable(candidate.version) }
 }
 
 tasks.withType<JavaCompile> {
