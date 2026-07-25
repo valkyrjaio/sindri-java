@@ -107,6 +107,61 @@ public class GrpcRouteAttributeReaderTest {
     }
 
     @Test
+    void readFile_classifiesMiddlewareIntoItsStagesAndEmitsThemPreSorted() {
+        // The @Middleware attribute names only the class, so each is classified by walking its
+        // hierarchy — here Auth is a RouteMatched stage and Audit a Terminated stage.
+        var middlewareSources =
+                java.util.Map.of(
+                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
+                        "package io.sindri.tests.fixtures.grpc.middleware;"
+                                + " import io.valkyrja.grpc.middleware.contract.RouteMatchedMiddlewareContract;"
+                                + " public class AuthMiddleware implements"
+                                + " RouteMatchedMiddlewareContract {}",
+                        "io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware",
+                        "package io.sindri.tests.fixtures.grpc.middleware;"
+                                + " import io.valkyrja.grpc.middleware.contract.TerminatedMiddlewareContract;"
+                                + " public class AuditMiddleware implements"
+                                + " TerminatedMiddlewareContract {}");
+        var reader =
+                new GrpcRouteAttributeReader(
+                        fqn ->
+                                java.util.Optional.ofNullable(middlewareSources.get(fqn))
+                                        .map(com.github.javaparser.StaticJavaParser::parse));
+
+        var result =
+                reader.readFile(fixturePath("Grpc/Controller/TestMiddlewareGrpcControllerClass.java"));
+        String supplier = result.routes().get("/pkg.Guarded/Guarded").toString();
+        GrpcRouteData data = result.routeData().get("/pkg.Guarded/Guarded");
+
+        assertTrue(
+                supplier.contains(
+                        ".withAddedRouteMatchedMiddleware(java.util.List.of(io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware.class))"));
+        assertTrue(
+                supplier.contains(
+                        ".withAddedTerminatedMiddleware(java.util.List.of(io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware.class))"));
+        assertEquals(
+                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware"),
+                data.routeMatchedMiddleware());
+        assertEquals(
+                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware"),
+                data.terminatedMiddleware());
+        assertTrue(data.routeDispatchedMiddleware().isEmpty());
+    }
+
+    @Test
+    void readFile_withoutAResolverClassifiesNoMiddleware() {
+        // The default reader cannot resolve middleware sources, so it emits none rather than
+        // guessing a stage.
+        String supplier =
+                read("TestMiddlewareGrpcControllerClass.java")
+                        .routes()
+                        .get("/pkg.Guarded/Guarded")
+                        .toString();
+
+        assertFalse(supplier.contains("withAdded"));
+    }
+
+    @Test
     void readFile_withNoTypeInFile_throws() {
         assertThrows(
                 RuntimeException.class,

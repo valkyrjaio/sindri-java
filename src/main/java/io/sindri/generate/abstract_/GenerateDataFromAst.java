@@ -17,6 +17,7 @@ import io.sindri.ast.ConfigReader;
 import io.sindri.ast.GrpcRouteAttributeReader;
 import io.sindri.ast.HttpRouteAttributeReader;
 import io.sindri.ast.ListenerProviderReader;
+import io.sindri.ast.MiddlewareClassifier;
 import io.sindri.ast.RouteProviderReader;
 import io.sindri.ast.ServiceProviderReader;
 import io.sindri.ast.data.HttpRouteData;
@@ -46,8 +47,29 @@ public abstract class GenerateDataFromAst {
     private final CliRouteAttributeReader cliRouteAttributeReader = new CliRouteAttributeReader();
     private final HttpRouteAttributeReader httpRouteAttributeReader =
             new HttpRouteAttributeReader();
-    private final GrpcRouteAttributeReader grpcRouteAttributeReader =
-            new GrpcRouteAttributeReader();
+
+    /**
+     * Resolve a class to its parsed source for middleware classification: app classes from the
+     * source tree, framework classes from the sources jar on the classpath. An unresolvable class
+     * simply stops that branch of the hierarchy walk.
+     *
+     * @param config the generation config
+     * @return the resolver
+     */
+    private MiddlewareClassifier.SourceResolver middlewareSourceResolver(ConfigResult config) {
+        return fqn -> {
+            String path = fqnToFilePath(fqn, config.namespace(), config.dir());
+            if (path.isEmpty()) {
+                return java.util.Optional.empty();
+            }
+            try {
+                return java.util.Optional.of(
+                        com.github.javaparser.StaticJavaParser.parse(new java.io.File(path)));
+            } catch (java.io.FileNotFoundException e) {
+                return java.util.Optional.empty();
+            }
+        };
+    }
 
     /** FQN → staged temp source path (or "" when unresolvable) for classpath-resolved sources. */
     private final Map<String, String> classpathSourceCache = new java.util.HashMap<>();
@@ -226,6 +248,10 @@ public abstract class GenerateDataFromAst {
             if (filePath.isEmpty()) {
                 continue;
             }
+            // Built per config so the reader can resolve each @Middleware class's source and
+            // classify it into its stages before the route is cached.
+            GrpcRouteAttributeReader grpcRouteAttributeReader =
+                    new GrpcRouteAttributeReader(middlewareSourceResolver(config));
             RouteProviderResult routeProvider = routeProviderReader.readFile(filePath);
             for (String controllerFqn : routeProvider.controllerClasses()) {
                 String controllerPath =
