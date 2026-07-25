@@ -50,9 +50,9 @@ public class GrpcRouteAttributeReader extends AstReader
         SENDING_RESPONSE(
                 "io.valkyrja.grpc.middleware.contract.SendingResponseMiddlewareContract",
                 "withAddedSendingResponseMiddleware"),
-        TERMINATED(
-                "io.valkyrja.grpc.middleware.contract.TerminatedMiddlewareContract",
-                "withAddedTerminatedMiddleware");
+        RESPONSE_SENT(
+                "io.valkyrja.grpc.middleware.contract.ResponseSentMiddlewareContract",
+                "withAddedResponseSentMiddleware");
 
         private final String contractFqn;
         private final String addMethod;
@@ -148,7 +148,7 @@ public class GrpcRouteAttributeReader extends AstReader
                             stageList(middleware, Stage.ROUTE_DISPATCHED),
                             stageList(middleware, Stage.THROWABLE_CAUGHT),
                             stageList(middleware, Stage.SENDING_RESPONSE),
-                            stageList(middleware, Stage.TERMINATED));
+                            stageList(middleware, Stage.RESPONSE_SENT));
             routeDataMap.put(fullMethod, data);
             routeMap.put(
                     fullMethod,

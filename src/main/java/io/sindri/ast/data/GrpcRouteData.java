@@ -24,7 +24,7 @@ public record GrpcRouteData(
         List<String> routeDispatchedMiddleware,
         List<String> throwableCaughtMiddleware,
         List<String> sendingResponseMiddleware,
-        List<String> terminatedMiddleware)
+        List<String> responseSentMiddleware)
         implements GrpcRouteDataContract {
 
     public GrpcRouteData(String method, String service, String methodName) {

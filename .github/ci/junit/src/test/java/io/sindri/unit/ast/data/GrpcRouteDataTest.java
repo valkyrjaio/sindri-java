@@ -31,6 +31,6 @@ final class GrpcRouteDataTest {
         assertFalse(data.clientStreaming());
         assertFalse(data.serverStreaming());
         assertTrue(data.routeMatchedMiddleware().isEmpty());
-        assertTrue(data.terminatedMiddleware().isEmpty());
+        assertTrue(data.responseSentMiddleware().isEmpty());
     }
 }

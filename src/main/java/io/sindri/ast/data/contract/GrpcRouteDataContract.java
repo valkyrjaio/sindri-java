@@ -34,5 +34,5 @@ public interface GrpcRouteDataContract {
 
     List<String> sendingResponseMiddleware();
 
-    List<String> terminatedMiddleware();
+    List<String> responseSentMiddleware();
 }
