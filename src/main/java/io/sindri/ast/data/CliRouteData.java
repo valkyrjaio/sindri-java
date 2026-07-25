@@ -21,7 +21,7 @@ public record CliRouteData(
         List<String> routeMatchedMiddleware,
         List<String> routeDispatchedMiddleware,
         List<String> throwableCaughtMiddleware,
-        List<String> exitedMiddleware,
+        List<String> processExitingMiddleware,
         List<CliArgumentParameterData> arguments,
         List<CliOptionParameterData> options)
         implements CliRouteDataContract {
