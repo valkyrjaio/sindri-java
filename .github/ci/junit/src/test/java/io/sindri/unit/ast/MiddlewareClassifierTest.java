@@ -84,6 +84,17 @@ final class MiddlewareClassifierTest {
     }
 
     @Test
+    void classifiesAStageContractReachedThroughAWildcardImport() {
+        var sources =
+                Map.of(
+                        "p.Wild",
+                        "package p; import v.*;"
+                                + " class Wild implements RouteMatchedMiddlewareContract {}");
+
+        assertEquals(Set.of(MATCHED), classifier.classify("p.Wild", resolver(sources), TARGETS));
+    }
+
+    @Test
     void classifiesAClassThatImplementsNoStageAsEmpty() {
         var sources =
                 Map.of("p.None", "package p; class None implements java.io.Serializable {}");

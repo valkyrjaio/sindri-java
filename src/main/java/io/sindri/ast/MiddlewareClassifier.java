@@ -86,16 +86,28 @@ public class MiddlewareClassifier extends AstReader {
             }
 
             Map<String, String> importMap = buildImportMap(cu.get());
+            List<String> wildcards = wildcardPackages(cu.get());
             String pkg = getPackageName(cu.get());
             for (ClassOrInterfaceType ancestor : type.get().getImplementedTypes()) {
-                pending.push(resolveName(ancestor, importMap, pkg));
+                pending.addAll(resolveNameCandidates(ancestor, importMap, wildcards, pkg));
             }
             for (ClassOrInterfaceType ancestor : type.get().getExtendedTypes()) {
-                pending.push(resolveName(ancestor, importMap, pkg));
+                pending.addAll(resolveNameCandidates(ancestor, importMap, wildcards, pkg));
             }
         }
 
         return matched;
+    }
+
+    /** The packages of the file's wildcard imports ({@code import pkg.*;}). */
+    private List<String> wildcardPackages(CompilationUnit cu) {
+        List<String> packages = new ArrayList<>();
+        for (var importDeclaration : cu.getImports()) {
+            if (importDeclaration.isAsterisk() && !importDeclaration.isStatic()) {
+                packages.add(importDeclaration.getNameAsString());
+            }
+        }
+        return packages;
     }
 
     /**
@@ -185,21 +197,33 @@ public class MiddlewareClassifier extends AstReader {
     }
 
     /**
-     * Resolve a written {@code implements}/{@code extends} type to a fully-qualified name: an
-     * already-qualified reference is taken as-is; a simple name is resolved through the file's
-     * imports, falling back to the same package.
+     * Resolve a written {@code implements}/{@code extends} type to its candidate fully-qualified
+     * names: an already-qualified reference or an explicit import resolves to exactly one; a bare
+     * simple name with no explicit import could come from the same package OR any wildcard import,
+     * so every possibility is returned and the walk matches whichever is a real target (extra
+     * candidates that resolve to nothing are harmless dead ends). Without this, a stage contract
+     * reached through a wildcard import would be missed and its stage silently dropped.
      */
-    private String resolveName(
-            ClassOrInterfaceType type, Map<String, String> importMap, String pkg) {
+    private List<String> resolveNameCandidates(
+            ClassOrInterfaceType type,
+            Map<String, String> importMap,
+            List<String> wildcards,
+            String pkg) {
         String written =
                 type.getScope().map(scope -> scope.asString() + ".").orElse("")
                         + type.getNameAsString();
         if (written.contains(".")) {
-            return written;
+            return List.of(written);
         }
         if (importMap.containsKey(written)) {
-            return importMap.get(written);
+            return List.of(importMap.get(written));
         }
-        return pkg.isEmpty() ? written : pkg + "." + written;
+
+        List<String> candidates = new ArrayList<>();
+        candidates.add(pkg.isEmpty() ? written : pkg + "." + written);
+        for (String wildcard : wildcards) {
+            candidates.add(wildcard + "." + written);
+        }
+        return candidates;
     }
 }
