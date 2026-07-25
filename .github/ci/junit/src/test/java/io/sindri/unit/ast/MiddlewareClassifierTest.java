@@ -95,6 +95,22 @@ final class MiddlewareClassifierTest {
     }
 
     @Test
+    void aSamePackageClassShadowsAWildcardImportedStageContract() {
+        // Wild has `import v.*;` but its own package also defines a RouteMatchedMiddlewareContract
+        // that implements no stage. Java resolves the bare name to the same-package type, so the
+        // framework contract must NOT be matched despite the wildcard import.
+        var sources =
+                Map.of(
+                        "p.Wild",
+                        "package p; import v.*;"
+                                + " class Wild implements RouteMatchedMiddlewareContract {}",
+                        "p.RouteMatchedMiddlewareContract",
+                        "package p; class RouteMatchedMiddlewareContract {}");
+
+        assertTrue(classifier.classify("p.Wild", resolver(sources), TARGETS).isEmpty());
+    }
+
+    @Test
     void classifiesAClassThatImplementsNoStageAsEmpty() {
         var sources =
                 Map.of("p.None", "package p; class None implements java.io.Serializable {}");

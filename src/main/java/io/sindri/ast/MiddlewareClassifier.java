@@ -89,10 +89,12 @@ public class MiddlewareClassifier extends AstReader {
             List<String> wildcards = wildcardPackages(cu.get());
             String pkg = getPackageName(cu.get());
             for (ClassOrInterfaceType ancestor : type.get().getImplementedTypes()) {
-                pending.addAll(resolveNameCandidates(ancestor, importMap, wildcards, pkg));
+                pending.addAll(
+                        resolveNameCandidates(ancestor, importMap, wildcards, pkg, resolver));
             }
             for (ClassOrInterfaceType ancestor : type.get().getExtendedTypes()) {
-                pending.addAll(resolveNameCandidates(ancestor, importMap, wildcards, pkg));
+                pending.addAll(
+                        resolveNameCandidates(ancestor, importMap, wildcards, pkg, resolver));
             }
         }
 
@@ -198,17 +200,20 @@ public class MiddlewareClassifier extends AstReader {
 
     /**
      * Resolve a written {@code implements}/{@code extends} type to its candidate fully-qualified
-     * names: an already-qualified reference or an explicit import resolves to exactly one; a bare
-     * simple name with no explicit import could come from the same package OR any wildcard import,
-     * so every possibility is returned and the walk matches whichever is a real target (extra
-     * candidates that resolve to nothing are harmless dead ends). Without this, a stage contract
-     * reached through a wildcard import would be missed and its stage silently dropped.
+     * names, following Java's name-resolution precedence: an already-qualified reference or an
+     * explicit single-type import resolves to exactly one; a bare simple name resolves to the
+     * same-package type if one actually exists (a same-package type shadows every wildcard import),
+     * and only otherwise fans out to the wildcard-import packages. Returning the wildcard
+     * candidates only when the same-package name does not resolve keeps a genuine wildcard-imported
+     * stage contract from being dropped, while stopping a local class that merely shares a
+     * contract's simple name from being misclassified as that contract.
      */
     private List<String> resolveNameCandidates(
             ClassOrInterfaceType type,
             Map<String, String> importMap,
             List<String> wildcards,
-            String pkg) {
+            String pkg,
+            SourceResolver resolver) {
         String written =
                 type.getScope().map(scope -> scope.asString() + ".").orElse("")
                         + type.getNameAsString();
@@ -219,8 +224,15 @@ public class MiddlewareClassifier extends AstReader {
             return List.of(importMap.get(written));
         }
 
+        String samePackage = pkg.isEmpty() ? written : pkg + "." + written;
+        if (resolver.resolve(samePackage).isPresent()) {
+            // A same-package type shadows any wildcard import (JLS §6.5.5.1), so it is the only
+            // candidate — don't also try the wildcard packages and risk a false target match.
+            return List.of(samePackage);
+        }
+
         List<String> candidates = new ArrayList<>();
-        candidates.add(pkg.isEmpty() ? written : pkg + "." + written);
+        candidates.add(samePackage);
         for (String wildcard : wildcards) {
             candidates.add(wildcard + "." + written);
         }
