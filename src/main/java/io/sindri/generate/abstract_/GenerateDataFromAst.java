@@ -45,8 +45,6 @@ public abstract class GenerateDataFromAst {
     private final RouteProviderReader routeProviderReader = new RouteProviderReader();
     private final ListenerProviderReader listenerProviderReader = new ListenerProviderReader();
     private final CliRouteAttributeReader cliRouteAttributeReader = new CliRouteAttributeReader();
-    private final HttpRouteAttributeReader httpRouteAttributeReader =
-            new HttpRouteAttributeReader();
 
     /**
      * Resolve a class to its parsed source for middleware classification: app classes from the
@@ -280,6 +278,11 @@ public abstract class GenerateDataFromAst {
             ConfigResult config,
             Map<String, String> httpRoutes,
             Map<String, HttpRouteData> httpRouteData) {
+        // Built per config so the reader can resolve each @Middleware class's source and classify
+        // it
+        // into its stages before the route is cached.
+        HttpRouteAttributeReader httpRouteAttributeReader =
+                new HttpRouteAttributeReader(middlewareSourceResolver(config));
         for (String providerFqn : httpRouteProviders) {
             String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
             if (filePath.isEmpty()) {

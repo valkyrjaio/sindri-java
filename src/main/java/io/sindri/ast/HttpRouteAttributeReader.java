@@ -29,12 +29,58 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 public class HttpRouteAttributeReader extends AstReader
         implements HttpRouteAttributeReaderContract {
 
+    /** The route-level middleware stage contracts, in {@code HttpRouteData} constructor order. */
+    private static final List<String> STAGE_CONTRACTS =
+            List.of(
+                    "io.valkyrja.http.middleware.contract.RouteMatchedMiddlewareContract",
+                    "io.valkyrja.http.middleware.contract.RouteDispatchedMiddlewareContract",
+                    "io.valkyrja.http.middleware.contract.ThrowableCaughtMiddlewareContract",
+                    "io.valkyrja.http.middleware.contract.SendingResponseMiddlewareContract",
+                    "io.valkyrja.http.middleware.contract.TerminatedMiddlewareContract");
+
     private final HttpRouteParameterReader parameterReader = new HttpRouteParameterReader();
+    private final MiddlewareClassifier classifier = new MiddlewareClassifier();
+    private final MiddlewareClassifier.SourceResolver resolver;
+
+    /** No-op resolver: without a way to resolve middleware sources, no middleware is classified. */
+    public HttpRouteAttributeReader() {
+        this(fqn -> Optional.empty());
+    }
+
+    public HttpRouteAttributeReader(MiddlewareClassifier.SourceResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    /** Classify the method's {@code @Middleware} into the stage lists, in constructor order. */
+    private List<List<String>> classifyMiddleware(
+            MethodDeclaration method, Map<String, String> imports, String pkg) {
+        Map<String, List<String>> byContract =
+                classifier.classifyMethod(
+                        method, imports, pkg, resolver, Set.copyOf(STAGE_CONTRACTS));
+        List<List<String>> lists = new ArrayList<>();
+        for (String contract : STAGE_CONTRACTS) {
+            lists.add(byContract.getOrDefault(contract, List.of()));
+        }
+        return lists;
+    }
+
+    /** Emit the five stage middleware lists as positional {@code List.of(...)} constructor args. */
+    private String emitMiddlewareLists(List<List<String>> middleware) {
+        List<String> parts = new ArrayList<>();
+        for (List<String> classes : middleware) {
+            parts.add(
+                    classes.isEmpty()
+                            ? "java.util.List.of()"
+                            : "java.util.List.of(" + String.join(".class, ", classes) + ".class)");
+        }
+        return String.join(", ", parts);
+    }
 
     @Override
     public HttpRouteAttributeResult readFile(String filePath) {
@@ -106,6 +152,7 @@ public class HttpRouteAttributeReader extends AstReader
                                 ? parameterReader.updateParameters(method, importMap, pkg)
                                 : List.of();
                 String regex = isDynamic ? computeRegex(path, name, parameters) : "";
+                List<List<String>> middleware = classifyMiddleware(method, importMap, pkg);
 
                 HttpRouteData data =
                         new HttpRouteData(
@@ -113,11 +160,11 @@ public class HttpRouteAttributeReader extends AstReader
                                 name,
                                 handler,
                                 requestMethods,
-                                List.of(),
-                                List.of(),
-                                List.of(),
-                                List.of(),
-                                List.of(),
+                                middleware.get(0),
+                                middleware.get(1),
+                                middleware.get(2),
+                                middleware.get(3),
+                                middleware.get(4),
                                 null,
                                 null,
                                 isDynamic,
@@ -127,7 +174,14 @@ public class HttpRouteAttributeReader extends AstReader
                 routeMap.put(
                         name,
                         buildRouteValue(
-                                path, name, handler, requestMethods, isDynamic, parameters, regex));
+                                path,
+                                name,
+                                handler,
+                                requestMethods,
+                                isDynamic,
+                                parameters,
+                                regex,
+                                middleware));
             }
         }
         return new HttpRouteAttributeResult(routeMap, routeDataMap);
@@ -145,19 +199,24 @@ public class HttpRouteAttributeReader extends AstReader
             List<String> requestMethods,
             boolean isDynamic,
             List<HttpParameterData> parameters,
-            String regex) {
+            String regex,
+            List<List<String>> middleware) {
         String handlerRef =
                 handler != null ? handler.handlerClass() + "::" + handler.method() : "null";
 
-        // The HEAD+GET default is exactly what the short Route/DynamicRoute constructors apply, so
-        // it needs no explicit arguments; any other set needs the full constructor.
+        // The HEAD+GET default with no middleware is exactly what the short Route/DynamicRoute
+        // constructors apply, so it needs no explicit arguments; any other set — or any middleware
+        // —
+        // needs the full constructor (otherwise the middleware would be silently dropped).
+        boolean hasMiddleware = middleware.stream().anyMatch(list -> !list.isEmpty());
         String tail =
-                requestMethods.equals(List.of("HEAD", "GET"))
+                requestMethods.equals(List.of("HEAD", "GET")) && !hasMiddleware
                         ? ")"
                         : ", "
                                 + buildRequestMethodsList(requestMethods)
-                                + ", java.util.List.of(), java.util.List.of(), java.util.List.of(),"
-                                + " java.util.List.of(), java.util.List.of(), null, null)";
+                                + ", "
+                                + emitMiddlewareLists(middleware)
+                                + ", null, null)";
 
         String head;
         if (isDynamic) {

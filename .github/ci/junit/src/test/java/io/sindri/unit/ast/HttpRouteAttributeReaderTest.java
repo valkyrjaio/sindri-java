@@ -125,4 +125,49 @@ public class HttpRouteAttributeReaderTest {
         assertTrue(result.routes().containsKey("edge"));
     }
 
+    @Test
+    void readFile_classifiesMiddlewareIntoStagesAndEmitsThemPreSorted() {
+        var middlewareSources =
+                java.util.Map.of(
+                        "io.sindri.tests.fixtures.http.middleware.AuthMiddleware",
+                        "package io.sindri.tests.fixtures.http.middleware;"
+                                + " import io.valkyrja.http.middleware.contract.RouteMatchedMiddlewareContract;"
+                                + " public class AuthMiddleware implements RouteMatchedMiddlewareContract {}",
+                        "io.sindri.tests.fixtures.http.middleware.AuditMiddleware",
+                        "package io.sindri.tests.fixtures.http.middleware;"
+                                + " import io.valkyrja.http.middleware.contract.TerminatedMiddlewareContract;"
+                                + " public class AuditMiddleware implements TerminatedMiddlewareContract {}");
+        var mwReader =
+                new HttpRouteAttributeReader(
+                        fqn ->
+                                java.util.Optional.ofNullable(middlewareSources.get(fqn))
+                                        .map(com.github.javaparser.StaticJavaParser::parse));
+
+        var result =
+                mwReader.readFile(fixturePath("Http/Controller/TestMiddlewareHttpControllerClass.java"));
+        HttpRouteData data = result.routeData().get("guarded");
+        String supplier = result.routes().get("guarded").toString();
+
+        assertEquals(
+                List.of("io.sindri.tests.fixtures.http.middleware.AuthMiddleware"),
+                data.routeMatchedMiddleware());
+        assertEquals(
+                List.of("io.sindri.tests.fixtures.http.middleware.AuditMiddleware"),
+                data.terminatedMiddleware());
+        assertTrue(data.routeDispatchedMiddleware().isEmpty());
+        assertTrue(
+                supplier.contains(
+                        "java.util.List.of(io.sindri.tests.fixtures.http.middleware.AuthMiddleware.class)"));
+        assertTrue(
+                supplier.contains(
+                        "java.util.List.of(io.sindri.tests.fixtures.http.middleware.AuditMiddleware.class)"));
+    }
+
+    @Test
+    void readFile_withoutAResolverClassifiesNoHttpMiddleware() {
+        HttpRouteAttributeResult result =
+                reader.readFile(fixturePath("Http/Controller/TestMiddlewareHttpControllerClass.java"));
+
+        assertTrue(result.routeData().get("guarded").routeMatchedMiddleware().isEmpty());
+    }
 }
