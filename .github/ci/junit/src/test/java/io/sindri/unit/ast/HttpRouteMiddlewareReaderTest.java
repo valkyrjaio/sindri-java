@@ -30,7 +30,7 @@ final class HttpRouteMiddlewareReaderTest {
         assertTrue(reader.updateRouteDispatchedMiddleware(method, Map.of(), "pkg").isEmpty());
         assertTrue(reader.updateThrowableCaughtMiddleware(method, Map.of(), "pkg").isEmpty());
         assertTrue(reader.updateSendingResponseMiddleware(method, Map.of(), "pkg").isEmpty());
-        assertTrue(reader.updateTerminatedMiddleware(method, Map.of(), "pkg").isEmpty());
+        assertTrue(reader.updateResponseSentMiddleware(method, Map.of(), "pkg").isEmpty());
         assertEquals("", reader.updateRequestStruct(method, Map.of(), "pkg"));
         assertEquals("", reader.updateResponseStruct(method, Map.of(), "pkg"));
     }

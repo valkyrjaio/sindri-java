@@ -30,7 +30,7 @@ public interface HttpRouteMiddlewareReaderContract {
     List<String> updateSendingResponseMiddleware(
             MethodDeclaration method, Map<String, String> importMap, String pkg);
 
-    List<String> updateTerminatedMiddleware(
+    List<String> updateResponseSentMiddleware(
             MethodDeclaration method, Map<String, String> importMap, String pkg);
 
     String updateRequestStruct(MethodDeclaration method, Map<String, String> importMap, String pkg);

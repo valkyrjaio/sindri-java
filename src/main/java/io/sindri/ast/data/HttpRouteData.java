@@ -22,7 +22,7 @@ public record HttpRouteData(
         List<String> routeDispatchedMiddleware,
         List<String> throwableCaughtMiddleware,
         List<String> sendingResponseMiddleware,
-        List<String> terminatedMiddleware,
+        List<String> responseSentMiddleware,
         @Nullable String requestStruct,
         @Nullable String responseStruct,
         boolean isDynamic,

@@ -30,7 +30,7 @@ public interface HttpRouteDataContract {
 
     List<String> sendingResponseMiddleware();
 
-    List<String> terminatedMiddleware();
+    List<String> responseSentMiddleware();
 
     @Nullable String requestStruct();
 
