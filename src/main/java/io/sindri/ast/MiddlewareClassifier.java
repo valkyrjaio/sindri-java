@@ -11,12 +11,20 @@ package io.sindri.ast;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.ArrayInitializerExpr;
+import com.github.javaparser.ast.expr.MemberValuePair;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import io.sindri.ast.abstract_.AstReader;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -88,6 +96,92 @@ public class MiddlewareClassifier extends AstReader {
         }
 
         return matched;
+    }
+
+    /**
+     * Read every {@code @Middleware} on a method and group each by the stage contracts it reaches.
+     *
+     * <p>Shared by the gRPC, HTTP, and CLI route readers — the {@code @Middleware} attribute and
+     * the classification are identical across protocols; only the set of stage contracts differs.
+     *
+     * @param method the handler method
+     * @param imports the declaring file's imports, for resolving the middleware class names
+     * @param pkg the declaring file's package, for same-package middleware
+     * @param resolver resolves a middleware/base class to its source
+     * @param targetFqns the protocol's stage-contract fully-qualified names
+     * @return each matched target contract mapped to the middleware classes assigned to it, in
+     *     order
+     */
+    public Map<String, List<String>> classifyMethod(
+            MethodDeclaration method,
+            Map<String, String> imports,
+            String pkg,
+            SourceResolver resolver,
+            Set<String> targetFqns) {
+        Map<String, List<String>> byTarget = new LinkedHashMap<>();
+        for (String middlewareFqn : middlewareClasses(method, imports, pkg)) {
+            for (String matched : classify(middlewareFqn, resolver, targetFqns)) {
+                byTarget.computeIfAbsent(matched, key -> new ArrayList<>()).add(middlewareFqn);
+            }
+        }
+        return byTarget;
+    }
+
+    /**
+     * Collect the fully-qualified middleware classes named by {@code @Middleware} on the method,
+     * expanding the repeatable container when the source spells it out explicitly.
+     */
+    private List<String> middlewareClasses(
+            MethodDeclaration method, Map<String, String> imports, String pkg) {
+        List<String> classes = new ArrayList<>();
+
+        for (AnnotationExpr annotation : method.getAnnotations()) {
+            String annotationName = annotation.getNameAsString();
+            if (annotationName.equals("Middleware")) {
+                addMiddlewareClass(annotation, imports, pkg, classes);
+            } else if (annotationName.equals("Middlewares")) {
+                annotation
+                        .findAll(ArrayInitializerExpr.class)
+                        .forEach(
+                                array ->
+                                        array.getValues()
+                                                .forEach(
+                                                        value -> {
+                                                            if (value
+                                                                    instanceof
+                                                                    AnnotationExpr nested) {
+                                                                addMiddlewareClass(
+                                                                        nested, imports, pkg,
+                                                                        classes);
+                                                            }
+                                                        }));
+            }
+        }
+
+        return classes;
+    }
+
+    private void addMiddlewareClass(
+            AnnotationExpr annotation, Map<String, String> imports, String pkg, List<String> into) {
+        if (!(annotation instanceof NormalAnnotationExpr normal)) {
+            return;
+        }
+
+        for (MemberValuePair pair : normal.getPairs()) {
+            if (!pair.getNameAsString().equals("name") || !pair.getValue().isClassExpr()) {
+                continue;
+            }
+
+            String written = pair.getValue().asClassExpr().getType().asString();
+            String fqn =
+                    written.contains(".")
+                            ? written
+                            : imports.getOrDefault(
+                                    written, pkg.isEmpty() ? written : pkg + "." + written);
+            if (!into.contains(fqn)) {
+                into.add(fqn);
+            }
+        }
     }
 
     /**
