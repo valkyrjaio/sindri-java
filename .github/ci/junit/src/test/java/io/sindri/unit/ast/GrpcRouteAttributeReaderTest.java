@@ -183,7 +183,7 @@ public class GrpcRouteAttributeReaderTest {
     }
 
     @Test
-    void readFile_resolvesAQualifiedMiddlewareNameAndDedupes() {
+    void readFile_appendsAQualifiedAndSimpleMiddlewareNameWithoutDeduping() {
         var middlewareSources =
                 java.util.Map.of(
                         "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
@@ -196,9 +196,12 @@ public class GrpcRouteAttributeReaderTest {
                                 java.util.Optional.ofNullable(middlewareSources.get(fqn))
                                         .map(com.github.javaparser.StaticJavaParser::parse));
 
-        // The qualified and simple forms resolve to the same class and are recorded once.
+        // The qualified and simple forms resolve to the same class, but the reader appends both —
+        // it never deduplicates, mirroring the runtime collector. A duplicate is the dev's concern.
         assertEquals(
-                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware"),
+                java.util.List.of(
+                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
+                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware"),
                 mwReader
                         .readFile(
                                 fixturePath(

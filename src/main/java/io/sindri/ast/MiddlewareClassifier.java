@@ -143,7 +143,10 @@ public class MiddlewareClassifier extends AstReader {
 
     /**
      * Collect the fully-qualified middleware classes named by {@code @Middleware} on the method,
-     * expanding the repeatable container when the source spells it out explicitly.
+     * expanding the repeatable container when the source spells it out explicitly. Classes are
+     * appended in source order and never deduplicated — the generated cache mirrors the runtime
+     * collector, which likewise appends, so a duplicate runs as many times as it is declared. Which
+     * copy to drop and whether order matters are the developer's call, not the framework's.
      */
     private List<String> middlewareClasses(
             MethodDeclaration method, Map<String, String> imports, String pkg) {
@@ -192,9 +195,7 @@ public class MiddlewareClassifier extends AstReader {
                             ? written
                             : imports.getOrDefault(
                                     written, pkg.isEmpty() ? written : pkg + "." + written);
-            if (!into.contains(fqn)) {
-                into.add(fqn);
-            }
+            into.add(fqn);
         }
     }
 
