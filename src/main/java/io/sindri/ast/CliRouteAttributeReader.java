@@ -27,6 +27,51 @@ import java.util.Optional;
 
 public class CliRouteAttributeReader extends AstReader implements CliRouteAttributeReaderContract {
 
+    /** The route-level middleware stage contracts, in {@code cli.routing.data.Route} order. */
+    private static final List<String> STAGE_CONTRACTS =
+            List.of(
+                    "io.valkyrja.cli.middleware.contract.RouteMatchedMiddlewareContract",
+                    "io.valkyrja.cli.middleware.contract.RouteDispatchedMiddlewareContract",
+                    "io.valkyrja.cli.middleware.contract.ThrowableCaughtMiddlewareContract",
+                    "io.valkyrja.cli.middleware.contract.ExitedMiddlewareContract");
+
+    private final MiddlewareClassifier classifier = new MiddlewareClassifier();
+    private final MiddlewareClassifier.SourceResolver resolver;
+
+    /** No-op resolver: without a way to resolve middleware sources, no middleware is classified. */
+    public CliRouteAttributeReader() {
+        this(fqn -> Optional.empty());
+    }
+
+    public CliRouteAttributeReader(MiddlewareClassifier.SourceResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    /** Classify the method's {@code @Middleware} into the stage lists, in constructor order. */
+    private List<List<String>> classifyMiddleware(
+            MethodDeclaration method, Map<String, String> imports, String pkg) {
+        Map<String, List<String>> byContract =
+                classifier.classifyMethod(
+                        method, imports, pkg, resolver, java.util.Set.copyOf(STAGE_CONTRACTS));
+        List<List<String>> lists = new java.util.ArrayList<>();
+        for (String contract : STAGE_CONTRACTS) {
+            lists.add(byContract.getOrDefault(contract, List.of()));
+        }
+        return lists;
+    }
+
+    /** Emit the four stage middleware lists as positional {@code List.of(...)} constructor args. */
+    private String emitMiddlewareLists(List<List<String>> middleware) {
+        List<String> parts = new java.util.ArrayList<>();
+        for (List<String> classes : middleware) {
+            parts.add(
+                    classes.isEmpty()
+                            ? "java.util.List.of()"
+                            : "java.util.List.of(" + String.join(".class, ", classes) + ".class)");
+        }
+        return String.join(", ", parts);
+    }
+
     @Override
     public CliRouteAttributeResult readFile(String filePath) {
         CompilationUnit cu = parseFile(filePath);
@@ -78,7 +123,11 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
                         default -> {}
                     }
                 }
-                routeMap.put(name, buildRouteValue(name, description, handlerClass, handlerMethod));
+                List<List<String>> middleware = classifyMiddleware(method, importMap, pkg);
+                routeMap.put(
+                        name,
+                        buildRouteValue(
+                                name, description, handlerClass, handlerMethod, middleware));
             }
         }
         return new CliRouteAttributeResult(routeMap);
@@ -90,19 +139,33 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
      * the generated file needs no extra imports. (Arguments/options are a follow-up — see TODO.)
      */
     private Expression buildRouteValue(
-            String name, String description, String handlerClass, String handlerMethod) {
+            String name,
+            String description,
+            String handlerClass,
+            String handlerMethod,
+            List<List<String>> middleware) {
         String handlerRef = !handlerClass.isEmpty() ? handlerClass + "::" + handlerMethod : "null";
 
-        String supplier =
-                "() -> new io.valkyrja.cli.routing.data.Route(\""
-                        + escapeJava(name)
-                        + "\", \""
-                        + escapeJava(description)
-                        + "\", "
-                        + handlerRef
-                        + ")";
+        StringBuilder supplier =
+                new StringBuilder(
+                        "() -> new io.valkyrja.cli.routing.data.Route(\""
+                                + escapeJava(name)
+                                + "\", \""
+                                + escapeJava(description)
+                                + "\", "
+                                + handlerRef);
+        // The short constructor covers a route with no middleware; any middleware needs the full
+        // constructor, whose null helpText and empty arguments/options match the short defaults
+        // (arguments/options are a follow-up — see TODO). Otherwise the middleware would be
+        // dropped.
+        if (middleware.stream().anyMatch(list -> !list.isEmpty())) {
+            supplier.append(", null, ")
+                    .append(emitMiddlewareLists(middleware))
+                    .append(", java.util.List.of(), java.util.List.of()");
+        }
+        supplier.append(")");
 
-        return StaticJavaParser.parseExpression(supplier);
+        return StaticJavaParser.parseExpression(supplier.toString());
     }
 
     private String escapeJava(String value) {
