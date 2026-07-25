@@ -149,6 +149,75 @@ public class GrpcRouteAttributeReaderTest {
     }
 
     @Test
+    void readFile_classifiesMiddlewareFromTheExplicitMiddlewaresContainer() {
+        var middlewareSources =
+                java.util.Map.of(
+                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
+                        "package io.sindri.tests.fixtures.grpc.middleware;"
+                                + " import io.valkyrja.grpc.middleware.contract.RouteMatchedMiddlewareContract;"
+                                + " public class AuthMiddleware implements RouteMatchedMiddlewareContract {}",
+                        "io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware",
+                        "package io.sindri.tests.fixtures.grpc.middleware;"
+                                + " import io.valkyrja.grpc.middleware.contract.ResponseSentMiddlewareContract;"
+                                + " public class AuditMiddleware implements ResponseSentMiddlewareContract {}");
+        var mwReader =
+                new GrpcRouteAttributeReader(
+                        fqn ->
+                                java.util.Optional.ofNullable(middlewareSources.get(fqn))
+                                        .map(com.github.javaparser.StaticJavaParser::parse));
+
+        GrpcRouteData data =
+                mwReader
+                        .readFile(
+                                fixturePath(
+                                        "Grpc/Controller/TestMiddlewaresContainerGrpcControllerClass.java"))
+                        .routeData()
+                        .get("/pkg.Wrapped/Wrapped");
+
+        assertEquals(
+                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware"),
+                data.routeMatchedMiddleware());
+        assertEquals(
+                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware"),
+                data.responseSentMiddleware());
+    }
+
+    @Test
+    void readFile_resolvesAQualifiedMiddlewareNameAndDedupes() {
+        var middlewareSources =
+                java.util.Map.of(
+                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
+                        "package io.sindri.tests.fixtures.grpc.middleware;"
+                                + " import io.valkyrja.grpc.middleware.contract.RouteMatchedMiddlewareContract;"
+                                + " public class AuthMiddleware implements RouteMatchedMiddlewareContract {}");
+        var mwReader =
+                new GrpcRouteAttributeReader(
+                        fqn ->
+                                java.util.Optional.ofNullable(middlewareSources.get(fqn))
+                                        .map(com.github.javaparser.StaticJavaParser::parse));
+
+        // The qualified and simple forms resolve to the same class and are recorded once.
+        assertEquals(
+                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware"),
+                mwReader
+                        .readFile(
+                                fixturePath(
+                                        "Grpc/Controller/TestQualifiedMiddlewareGrpcControllerClass.java"))
+                        .routeData()
+                        .get("/pkg.Qualified/Qualified")
+                        .routeMatchedMiddleware());
+    }
+
+    @Test
+    void readFile_withNonLiteralMethodName_throws() {
+        RuntimeException thrown =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> read("TestNonLiteralMethodGrpcControllerClass.java"));
+        assertTrue(thrown.getMessage().contains("@Method(name)"));
+    }
+
+    @Test
     void readFile_withoutAResolverClassifiesNoMiddleware() {
         // The default reader cannot resolve middleware sources, so it emits none rather than
         // guessing a stage.
