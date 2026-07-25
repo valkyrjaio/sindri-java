@@ -1,6 +1,18 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.1.2...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.2.0...26.x)
+
+## [v26.2.0](https://github.com/valkyrjaio/sindri-java/compare/v26.1.2...v26.2.0) - 2026-07-25
+
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/32
+* [Generation] Inline manually-defined provider routes into generated routing data by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/33
+* [Tests] Change Classes namespace to Fixtures by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/34
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/35
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/36
+* [Documentation] Add AGENTS.md agent guide by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/37
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/39
+* [GitHub] Update .github workflow refs to v26.10.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/40
+* [Http][Cli] Rename route terminated/exited middleware to responseSent/processExiting by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/41
 
 ## [v26.1.2](https://github.com/valkyrjaio/sindri-java/compare/v26.1.1...v26.1.2) - 2026-06-21
 
