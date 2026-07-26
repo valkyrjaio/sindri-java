@@ -89,8 +89,8 @@ public class CliRouteAttributeReaderTest {
                                 + " public class AuthMiddleware implements RouteMatchedMiddlewareContract {}",
                         "io.sindri.tests.fixtures.cli.middleware.AuditMiddleware",
                         "package io.sindri.tests.fixtures.cli.middleware;"
-                                + " import io.valkyrja.cli.middleware.contract.ExitedMiddlewareContract;"
-                                + " public class AuditMiddleware implements ExitedMiddlewareContract {}");
+                                + " import io.valkyrja.cli.middleware.contract.ProcessExitingMiddlewareContract;"
+                                + " public class AuditMiddleware implements ProcessExitingMiddlewareContract {}");
         var mwReader =
                 new CliRouteAttributeReader(
                         fqn ->

@@ -135,8 +135,8 @@ public class HttpRouteAttributeReaderTest {
                                 + " public class AuthMiddleware implements RouteMatchedMiddlewareContract {}",
                         "io.sindri.tests.fixtures.http.middleware.AuditMiddleware",
                         "package io.sindri.tests.fixtures.http.middleware;"
-                                + " import io.valkyrja.http.middleware.contract.TerminatedMiddlewareContract;"
-                                + " public class AuditMiddleware implements TerminatedMiddlewareContract {}");
+                                + " import io.valkyrja.http.middleware.contract.ResponseSentMiddlewareContract;"
+                                + " public class AuditMiddleware implements ResponseSentMiddlewareContract {}");
         var mwReader =
                 new HttpRouteAttributeReader(
                         fqn ->
@@ -153,7 +153,7 @@ public class HttpRouteAttributeReaderTest {
                 data.routeMatchedMiddleware());
         assertEquals(
                 List.of("io.sindri.tests.fixtures.http.middleware.AuditMiddleware"),
-                data.terminatedMiddleware());
+                data.responseSentMiddleware());
         assertTrue(data.routeDispatchedMiddleware().isEmpty());
         assertTrue(
                 supplier.contains(

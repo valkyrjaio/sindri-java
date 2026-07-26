@@ -33,7 +33,7 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
                     "io.valkyrja.cli.middleware.contract.RouteMatchedMiddlewareContract",
                     "io.valkyrja.cli.middleware.contract.RouteDispatchedMiddlewareContract",
                     "io.valkyrja.cli.middleware.contract.ThrowableCaughtMiddlewareContract",
-                    "io.valkyrja.cli.middleware.contract.ExitedMiddlewareContract");
+                    "io.valkyrja.cli.middleware.contract.ProcessExitingMiddlewareContract");
 
     private final MiddlewareClassifier classifier = new MiddlewareClassifier();
     private final MiddlewareClassifier.SourceResolver resolver;

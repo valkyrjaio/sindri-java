@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 final class MiddlewareClassifierTest {
 
     private static final String MATCHED = "v.RouteMatchedMiddlewareContract";
-    private static final String TERMINATED = "v.TerminatedMiddlewareContract";
+    private static final String TERMINATED = "v.ResponseSentMiddlewareContract";
     private static final Set<String> TARGETS = Set.of(MATCHED, TERMINATED);
 
     private final MiddlewareClassifier classifier = new MiddlewareClassifier();
@@ -51,9 +51,9 @@ final class MiddlewareClassifierTest {
                         "p.Multi",
                         "package p;"
                                 + " import v.RouteMatchedMiddlewareContract;"
-                                + " import v.TerminatedMiddlewareContract;"
+                                + " import v.ResponseSentMiddlewareContract;"
                                 + " class Multi implements RouteMatchedMiddlewareContract,"
-                                + " TerminatedMiddlewareContract {}");
+                                + " ResponseSentMiddlewareContract {}");
 
         assertEquals(TARGETS, classifier.classify("p.Multi", resolver(sources), TARGETS));
     }
@@ -76,8 +76,8 @@ final class MiddlewareClassifierTest {
         var sources =
                 Map.of(
                         "p.Custom",
-                        "package p; import v.TerminatedMiddlewareContract;"
-                                + " interface Custom extends TerminatedMiddlewareContract {}",
+                        "package p; import v.ResponseSentMiddlewareContract;"
+                                + " interface Custom extends ResponseSentMiddlewareContract {}",
                         "p.Uses", "package p; class Uses implements Custom {}");
 
         assertEquals(Set.of(TERMINATED), classifier.classify("p.Uses", resolver(sources), TARGETS));

@@ -42,7 +42,7 @@ public class HttpRouteAttributeReader extends AstReader
                     "io.valkyrja.http.middleware.contract.RouteDispatchedMiddlewareContract",
                     "io.valkyrja.http.middleware.contract.ThrowableCaughtMiddlewareContract",
                     "io.valkyrja.http.middleware.contract.SendingResponseMiddlewareContract",
-                    "io.valkyrja.http.middleware.contract.TerminatedMiddlewareContract");
+                    "io.valkyrja.http.middleware.contract.ResponseSentMiddlewareContract");
 
     private final HttpRouteParameterReader parameterReader = new HttpRouteParameterReader();
     private final MiddlewareClassifier classifier = new MiddlewareClassifier();
