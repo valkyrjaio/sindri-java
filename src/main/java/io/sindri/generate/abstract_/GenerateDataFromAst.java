@@ -14,20 +14,26 @@ import com.github.javaparser.ast.expr.FieldAccessExpr;
 import io.sindri.ast.CliRouteAttributeReader;
 import io.sindri.ast.ComponentProviderReader;
 import io.sindri.ast.ConfigReader;
+import io.sindri.ast.GrpcRouteAttributeReader;
 import io.sindri.ast.HttpRouteAttributeReader;
 import io.sindri.ast.ListenerProviderReader;
+import io.sindri.ast.MiddlewareClassifier;
 import io.sindri.ast.RouteProviderReader;
 import io.sindri.ast.ServiceProviderReader;
 import io.sindri.ast.data.HttpRouteData;
 import io.sindri.ast.data.result.CliRouteAttributeResult;
 import io.sindri.ast.data.result.ComponentProviderResult;
 import io.sindri.ast.data.result.ConfigResult;
+import io.sindri.ast.data.result.GrpcRouteAttributeResult;
 import io.sindri.ast.data.result.HttpRouteAttributeResult;
 import io.sindri.ast.data.result.RouteProviderResult;
 import io.sindri.generator.cli.contract.CliDataFileGeneratorContract;
 import io.sindri.generator.container.contract.ContainerDataFileGeneratorContract;
+import io.sindri.generator.enum_.GenerateStatus;
 import io.sindri.generator.event.contract.EventDataFileGeneratorContract;
+import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import io.sindri.generator.http.contract.HttpDataFileGeneratorContract;
+import io.sindri.generator.throwable.exception.DataFileWriteException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -38,9 +44,29 @@ public abstract class GenerateDataFromAst {
     private final ServiceProviderReader serviceProviderReader = new ServiceProviderReader();
     private final RouteProviderReader routeProviderReader = new RouteProviderReader();
     private final ListenerProviderReader listenerProviderReader = new ListenerProviderReader();
-    private final CliRouteAttributeReader cliRouteAttributeReader = new CliRouteAttributeReader();
-    private final HttpRouteAttributeReader httpRouteAttributeReader =
-            new HttpRouteAttributeReader();
+
+    /**
+     * Resolve a class to its parsed source for middleware classification: app classes from the
+     * source tree, framework classes from the sources jar on the classpath. An unresolvable class
+     * simply stops that branch of the hierarchy walk.
+     *
+     * @param config the generation config
+     * @return the resolver
+     */
+    private MiddlewareClassifier.SourceResolver middlewareSourceResolver(ConfigResult config) {
+        return fqn -> {
+            String path = fqnToFilePath(fqn, config.namespace(), config.dir());
+            if (path.isEmpty()) {
+                return java.util.Optional.empty();
+            }
+            try {
+                return java.util.Optional.of(
+                        com.github.javaparser.StaticJavaParser.parse(new java.io.File(path)));
+            } catch (java.io.FileNotFoundException e) {
+                return java.util.Optional.empty();
+            }
+        };
+    }
 
     /** FQN → staged temp source path (or "" when unresolvable) for classpath-resolved sources. */
     private final Map<String, String> classpathSourceCache = new java.util.HashMap<>();
@@ -52,6 +78,8 @@ public abstract class GenerateDataFromAst {
     protected abstract CliDataFileGeneratorContract getCliDataFileGenerator();
 
     protected abstract HttpDataFileGeneratorContract getHttpDataFileGenerator();
+
+    protected abstract GrpcDataFileGeneratorContract getGrpcDataFileGenerator();
 
     public void run(String configFilePath) {
         ConfigResult config = configReader.readFile(configFilePath);
@@ -71,18 +99,54 @@ public abstract class GenerateDataFromAst {
         Map<String, HttpRouteData> httpRouteData = new LinkedHashMap<>();
         collectHttpRoutes(allProviderData.httpRouteProviders(), config, httpRoutes, httpRouteData);
 
+        Map<String, String> grpcRoutes =
+                collectGrpcRoutes(allProviderData.grpcRouteProviders(), config);
+
         String dataClassName = "AppContainerData";
         String dataDir = config.dataPath();
         String dataNamespace = config.dataNamespace();
 
-        getContainerDataFileGenerator()
-                .generateFile(dataDir, dataClassName, dataNamespace, publishers);
-        getEventDataFileGenerator().generateFile(dataDir, "AppEventData", dataNamespace, listeners);
-        getCliDataFileGenerator()
-                .generateFile(dataDir, "AppCliRoutingData", dataNamespace, cliRoutes);
-        getHttpDataFileGenerator()
-                .generateFile(
-                        dataDir, "AppHttpRoutingData", dataNamespace, httpRoutes, httpRouteData);
+        requireWritten(
+                dataClassName,
+                getContainerDataFileGenerator()
+                        .generateFile(dataDir, dataClassName, dataNamespace, publishers));
+        requireWritten(
+                "AppEventData",
+                getEventDataFileGenerator()
+                        .generateFile(dataDir, "AppEventData", dataNamespace, listeners));
+        requireWritten(
+                "AppCliRoutingData",
+                getCliDataFileGenerator()
+                        .generateFile(dataDir, "AppCliRoutingData", dataNamespace, cliRoutes));
+        requireWritten(
+                "AppHttpRoutingData",
+                getHttpDataFileGenerator()
+                        .generateFile(
+                                dataDir,
+                                "AppHttpRoutingData",
+                                dataNamespace,
+                                httpRoutes,
+                                httpRouteData));
+        requireWritten(
+                "AppGrpcRoutingData",
+                getGrpcDataFileGenerator()
+                        .generateFile(dataDir, "AppGrpcRoutingData", dataNamespace, grpcRoutes));
+    }
+
+    /**
+     * Fail loudly when a data file could not be written.
+     *
+     * <p>A discarded {@link GenerateStatus#FAILURE} leaves the previous generation's data class on
+     * disk (or none at all) while the build reports success — the application then boots against a
+     * stale route map. Surface it instead.
+     *
+     * @param dataClassName the data class being written, for the error message
+     * @param status the generator's result
+     */
+    private void requireWritten(String dataClassName, GenerateStatus status) {
+        if (status == GenerateStatus.FAILURE) {
+            throw new DataFileWriteException("Failed to write " + dataClassName + ".");
+        }
     }
 
     private ComponentProviderResult collectProviderData(ConfigResult config) {
@@ -144,6 +208,11 @@ public abstract class GenerateDataFromAst {
 
     private Map<String, String> collectCliRoutes(
             java.util.List<String> cliRouteProviders, ConfigResult config) {
+        // Built per config so the reader can resolve each @Middleware class's source and classify
+        // it
+        // into its stages before the route is cached.
+        CliRouteAttributeReader cliRouteAttributeReader =
+                new CliRouteAttributeReader(middlewareSourceResolver(config));
         Map<String, String> routes = new LinkedHashMap<>();
         for (String providerFqn : cliRouteProviders) {
             String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
@@ -173,11 +242,51 @@ public abstract class GenerateDataFromAst {
         return routes;
     }
 
+    private Map<String, String> collectGrpcRoutes(
+            java.util.List<String> grpcRouteProviders, ConfigResult config) {
+        Map<String, String> routes = new LinkedHashMap<>();
+        for (String providerFqn : grpcRouteProviders) {
+            String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
+            if (filePath.isEmpty()) {
+                continue;
+            }
+            // Built per config so the reader can resolve each @Middleware class's source and
+            // classify it into its stages before the route is cached.
+            GrpcRouteAttributeReader grpcRouteAttributeReader =
+                    new GrpcRouteAttributeReader(middlewareSourceResolver(config));
+            RouteProviderResult routeProvider = routeProviderReader.readFile(filePath);
+            for (String controllerFqn : routeProvider.controllerClasses()) {
+                String controllerPath =
+                        fqnToFilePath(controllerFqn, config.namespace(), config.dir());
+                if (!controllerPath.isEmpty()) {
+                    GrpcRouteAttributeResult result =
+                            grpcRouteAttributeReader.readFile(controllerPath);
+                    result.routes().forEach((method, expr) -> routes.put(method, expr.toString()));
+                }
+            }
+
+            // Manually-defined provider routes (getRoutes()) — the gRPC Route's fully-qualified
+            // method is its first constructor argument.
+            for (Expression routeExpr : routeProvider.routes()) {
+                String method = extractRouteArgString(routeExpr, 0);
+                if (!method.isEmpty()) {
+                    routes.put(method, "() -> " + routeExpr);
+                }
+            }
+        }
+        return routes;
+    }
+
     private void collectHttpRoutes(
             java.util.List<String> httpRouteProviders,
             ConfigResult config,
             Map<String, String> httpRoutes,
             Map<String, HttpRouteData> httpRouteData) {
+        // Built per config so the reader can resolve each @Middleware class's source and classify
+        // it
+        // into its stages before the route is cached.
+        HttpRouteAttributeReader httpRouteAttributeReader =
+                new HttpRouteAttributeReader(middlewareSourceResolver(config));
         for (String providerFqn : httpRouteProviders) {
             String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
             if (filePath.isEmpty()) {

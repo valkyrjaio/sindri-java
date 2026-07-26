@@ -32,7 +32,7 @@ public class AstHttpDataFileGenerator extends AstFileGenerator
                 buildFileContents(
                         namespace,
                         className,
-                        buildRoutesBody(routes, routeData),
+                        buildRoutesBody(routes),
                         buildPathsBody(routeData, false),
                         buildPathsBody(routeData, true),
                         buildRegexesBody(routeData));
@@ -94,47 +94,7 @@ public class AstHttpDataFileGenerator extends AstFileGenerator
     @Override
     public String generateClassContents(
             Map<String, String> routes, Map<String, HttpRouteData> routeData) {
-        return buildRoutesBody(routes, routeData);
-    }
-
-    protected String buildRoutesBody(
-            Map<String, String> routes, Map<String, HttpRouteData> routeData) {
-        if (routes.isEmpty()) {
-            return "        return Map.of();";
-        }
-        if (routes.size() <= 10) {
-            StringBuilder sb = new StringBuilder("        return Map.of(\n");
-            int i = 0;
-            for (Map.Entry<String, String> entry : routes.entrySet()) {
-                sb.append("            \"")
-                        .append(entry.getKey())
-                        .append("\", ")
-                        .append(entry.getValue());
-                if (i < routes.size() - 1) {
-                    sb.append(",");
-                }
-                sb.append("\n");
-                i++;
-            }
-            sb.append("        );");
-            return sb.toString();
-        }
-        StringBuilder sb = new StringBuilder("        return Map.ofEntries(\n");
-        int i = 0;
-        for (Map.Entry<String, String> entry : routes.entrySet()) {
-            sb.append("            Map.entry(\"")
-                    .append(entry.getKey())
-                    .append("\", ")
-                    .append(entry.getValue())
-                    .append(")");
-            if (i < routes.size() - 1) {
-                sb.append(",");
-            }
-            sb.append("\n");
-            i++;
-        }
-        sb.append("        );");
-        return sb.toString();
+        return buildRoutesBody(routes);
     }
 
     protected String buildPathsBody(Map<String, HttpRouteData> routeData, boolean dynamic) {

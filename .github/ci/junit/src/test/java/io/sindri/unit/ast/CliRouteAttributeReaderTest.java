@@ -77,4 +77,50 @@ public class CliRouteAttributeReaderTest {
         // Marker @RouteHandler (not a NormalAnnotationExpr) → null handler too.
         assertTrue(result.routes().get("marker").toString().contains(", null)"));
     }
+
+    @Test
+    void readFile_classifiesMiddlewareIntoStagesAndEmitsThemPreSorted() {
+        // Auth is a RouteMatched stage; Audit is the terminal Exited stage.
+        var middlewareSources =
+                java.util.Map.of(
+                        "io.sindri.tests.fixtures.cli.middleware.AuthMiddleware",
+                        "package io.sindri.tests.fixtures.cli.middleware;"
+                                + " import io.valkyrja.cli.middleware.contract.RouteMatchedMiddlewareContract;"
+                                + " public class AuthMiddleware implements RouteMatchedMiddlewareContract {}",
+                        "io.sindri.tests.fixtures.cli.middleware.AuditMiddleware",
+                        "package io.sindri.tests.fixtures.cli.middleware;"
+                                + " import io.valkyrja.cli.middleware.contract.ProcessExitingMiddlewareContract;"
+                                + " public class AuditMiddleware implements ProcessExitingMiddlewareContract {}");
+        var mwReader =
+                new CliRouteAttributeReader(
+                        fqn ->
+                                java.util.Optional.ofNullable(middlewareSources.get(fqn))
+                                        .map(com.github.javaparser.StaticJavaParser::parse));
+
+        String supplier =
+                mwReader
+                        .readFile(fixturePath("Cli/Controller/TestMiddlewareCliControllerClass.java"))
+                        .routes()
+                        .get("guarded")
+                        .toString();
+
+        // routeMatched=[Auth], routeDispatched=[], throwableCaught=[], exited=[Audit].
+        org.junit.jupiter.api.Assertions.assertTrue(
+                supplier.contains(
+                        "null, java.util.List.of(io.sindri.tests.fixtures.cli.middleware.AuthMiddleware.class),"
+                            + " java.util.List.of(), java.util.List.of(),"
+                            + " java.util.List.of(io.sindri.tests.fixtures.cli.middleware.AuditMiddleware.class),"
+                            + " java.util.List.of(), java.util.List.of()"));
+    }
+
+    @Test
+    void readFile_withoutAResolverEmitsTheShortConstructor() {
+        String supplier =
+                reader.readFile(fixturePath("Cli/Controller/TestMiddlewareCliControllerClass.java"))
+                        .routes()
+                        .get("guarded")
+                        .toString();
+
+        org.junit.jupiter.api.Assertions.assertFalse(supplier.contains("java.util.List.of("));
+    }
 }

@@ -2,6 +2,7 @@ package io.sindri.tests.fixtures.component.provider;
 
 import io.sindri.tests.fixtures.container.provider.TestServiceProviderClass;
 import io.sindri.tests.fixtures.event.provider.TestListenerProviderClass;
+import io.sindri.tests.fixtures.grpc.provider.TestGrpcRouteProviderClass;
 import io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderClass;
 
 import java.util.List;
@@ -26,5 +27,9 @@ public final class TestComponentProviderClass {
 
     public List<Object> getHttpProviders(Object app) {
         return List.of(new TestHttpRouteProviderClass());
+    }
+
+    public List<Object> getGrpcProviders(Object app) {
+        return List.of(new TestGrpcRouteProviderClass());
     }
 }

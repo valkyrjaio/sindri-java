@@ -44,13 +44,16 @@ public class ComponentProviderReader extends AstReader implements ComponentProvi
                 extractObjectCreationFqns(methods, "getCliProviders", importMap, pkg);
         List<String> httpRouteProviders =
                 extractObjectCreationFqns(methods, "getHttpProviders", importMap, pkg);
+        List<String> grpcRouteProviders =
+                extractObjectCreationFqns(methods, "getGrpcProviders", importMap, pkg);
 
         return new ComponentProviderResult(
                 componentProviders,
                 serviceProviders,
                 listenerProviders,
                 cliRouteProviders,
-                httpRouteProviders);
+                httpRouteProviders,
+                grpcRouteProviders);
     }
 
     private List<String> extractObjectCreationFqns(

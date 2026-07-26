@@ -7,15 +7,15 @@
  * file that was distributed with this source code.
  */
 
-package io.sindri.generator.ast.cli;
+package io.sindri.generator.ast.grpc;
 
 import io.sindri.generator.abstract_.AstFileGenerator;
-import io.sindri.generator.cli.contract.CliDataFileGeneratorContract;
 import io.sindri.generator.enum_.GenerateStatus;
+import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import java.util.Map;
 
-public class AstCliDataFileGenerator extends AstFileGenerator
-        implements CliDataFileGeneratorContract {
+public class AstGrpcDataFileGenerator extends AstFileGenerator
+        implements GrpcDataFileGeneratorContract {
 
     @Override
     public GenerateStatus generateFile(
@@ -25,8 +25,8 @@ public class AstCliDataFileGenerator extends AstFileGenerator
                         namespace,
                         className,
                         buildRoutesBody(routes),
-                        "cli",
-                        "CliRoutingDataContract");
+                        "grpc",
+                        "GrpcRoutingDataContract");
         return writeFile(directory, className, contents);
     }
 

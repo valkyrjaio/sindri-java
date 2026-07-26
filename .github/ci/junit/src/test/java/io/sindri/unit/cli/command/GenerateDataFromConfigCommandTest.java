@@ -96,6 +96,10 @@ final class GenerateDataFromConfigCommandTest {
                     public List<Object> getHttpProviders(Object app) {
                         return List.of(new AppHttpRouteProvider(), new ext.Ext());
                     }
+
+                    public List<Object> getGrpcProviders(Object app) {
+                        return List.of(new AppGrpcRouteProvider(), new ext.Ext());
+                    }
                 }
                 """);
 
@@ -272,6 +276,57 @@ final class GenerateDataFromConfigCommandTest {
                 }
                 """);
 
+        writeFixture(
+                appDir,
+                "AppGrpcRouteProvider.java",
+                """
+                package app;
+
+                import java.util.List;
+
+                import io.valkyrja.grpc.routing.data.Route;
+
+                public final class AppGrpcRouteProvider {
+                    public List<Class<?>> getControllerClasses() {
+                        return List.of(AppGrpcController.class, ext.Ext.class);
+                    }
+
+                    public List<Object> getRoutes() {
+                        return List.of(
+                                new Route("/app.Manual/Do", AppGrpcRouteProvider::run),
+                                // A non-string method (arg 0) cannot be keyed, so this is skipped.
+                                new Route(NoName.VALUE, AppGrpcRouteProvider::run));
+                    }
+
+                    public static Object run(Object container, Object route) {
+                        return null;
+                    }
+                }
+                """);
+
+        writeFixture(
+                appDir,
+                "AppGrpcController.java",
+                """
+                package app;
+
+                import io.valkyrja.grpc.routing.attribute.GrpcMethod;
+                import io.valkyrja.grpc.routing.attribute.GrpcService;
+
+                @Service(service = "app.Greeter")
+                public class AppGrpcController {
+                    @Method(name = "SayHello")
+                    public Object sayHello(Object container, Object route) {
+                        return null;
+                    }
+
+                    @Method(name = "StreamHellos", serverStreaming = true)
+                    public Object streamHellos(Object container, Object route) {
+                        return null;
+                    }
+                }
+                """);
+
         return appDir;
     }
 
@@ -287,7 +342,7 @@ final class GenerateDataFromConfigCommandTest {
     }
 
     @Test
-    void generatesAllFourDataFilesFromConfig(@TempDir Path tmp) throws IOException {
+    void generatesAllDataFilesFromConfig(@TempDir Path tmp) throws IOException {
         Path appDir = writeApp(tmp);
         var original = System.out;
         System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
@@ -302,6 +357,41 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(Files.exists(dataDir.resolve("AppEventData.java")));
         assertTrue(Files.exists(dataDir.resolve("AppCliRoutingData.java")));
         assertTrue(Files.exists(dataDir.resolve("AppHttpRoutingData.java")));
+        assertTrue(Files.exists(dataDir.resolve("AppGrpcRoutingData.java")));
+    }
+
+    @Test
+    void generatesExpectedGrpcRoutingContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String grpc = Files.readString(appDir.resolve("data").resolve("AppGrpcRoutingData.java"));
+
+        assertTrue(grpc.contains("implements GrpcRoutingDataContract"), () -> grpc);
+        // Controller-annotation gRPC route: keyed by /service/method, reflective handler.
+        assertTrue(
+                grpc.contains(
+                        "\"/app.Greeter/SayHello\", () -> new io.valkyrja.grpc.routing.data.Route(\"/app.Greeter/SayHello\","
+                                + " (c, r) -> new app.AppGrpcController().sayHello(c, r))"),
+                () -> "controller gRPC route missing:\n" + grpc);
+        // Server-streaming flag carried through.
+        assertTrue(
+                grpc.contains(
+                        "(c, r) -> new app.AppGrpcController().streamHellos(c, r)).withServerStreaming(true)"),
+                () -> "streaming gRPC route missing/incorrect:\n" + grpc);
+        // Manually-defined provider getRoutes() gRPC route, combined and fully qualified.
+        assertTrue(
+                grpc.contains(
+                        "\"/app.Manual/Do\", () -> new io.valkyrja.grpc.routing.data.Route(\"/app.Manual/Do\","
+                                + " app.AppGrpcRouteProvider::run)"),
+                () -> "provider gRPC route not combined:\n" + grpc);
+        assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(grpc));
     }
 
     @Test

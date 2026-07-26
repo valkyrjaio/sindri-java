@@ -49,6 +49,14 @@ public class ComponentProviderReaderTest {
     }
 
     @Test
+    void readFile_parsesGrpcRouteProviders() {
+        ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
+
+        assertEquals(1, data.grpcRouteProviders().size());
+        assertEquals("io.sindri.tests.fixtures.grpc.provider.TestGrpcRouteProviderClass", data.grpcRouteProviders().get(0));
+    }
+
+    @Test
     void readFile_emptyComponentAndCliRouteProviders() {
         ComponentProviderResult data = reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
 
