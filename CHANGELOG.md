@@ -1,6 +1,15 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.2.0...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.3.0...26.x)
+
+## [v26.3.0](https://github.com/valkyrjaio/sindri-java/compare/v26.2.0...v26.3.0) - 2026-07-25
+
+* [GitHub] Update .github workflow refs to v26.11.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/42
+* [Gradle] Auto-update root build dependencies by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/43
+* [Generator] Add golden/snapshot tests for the Ast data-file generators by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/44
+* [Documentation] Correct Maven Central group ID in README badge by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/46
+* [Grpc] Add gRPC data-class generation by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/38
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/48
 
 ## [v26.2.0](https://github.com/valkyrjaio/sindri-java/compare/v26.1.2...v26.2.0) - 2026-07-25
 
