@@ -44,13 +44,13 @@ Add Sindri to an existing Valkyrja project's build:
 
 ```kotlin
 // Gradle (Kotlin DSL)
-implementation("io.sindri:sindri:26.0.0")
+implementation("io.valkyrja:sindri:26.0.0")
 ```
 
 ```xml
 <!-- Maven -->
 <dependency>
-    <groupId>io.sindri</groupId>
+    <groupId>io.valkyrja</groupId>
     <artifactId>sindri</artifactId>
     <version>26.0.0</version>
 </dependency>
