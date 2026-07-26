@@ -3,7 +3,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     java
     application
-    id("com.vanniktech.maven.publish") version "0.30.0"
+    id("com.vanniktech.maven.publish") version "0.37.0"
     id("com.github.ben-manes.versions") version "0.54.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
@@ -24,7 +24,7 @@ dependencies {
     // from the classpath during generation (GenerateDataFromAst.resolveSourceFromClasspath) so
     // their publishers()/nested providers are scanned, the way PHP uses ReflectionClass::getFileName().
     runtimeOnly("io.valkyrja:valkyrja:26.3.0:sources")
-    implementation("com.github.javaparser:javaparser-symbol-solver-core:3.26.4")
+    implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.0")
 }
 
