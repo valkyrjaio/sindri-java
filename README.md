@@ -15,7 +15,7 @@ Valkyrja app what his namesake did for the gods: crafts the tools and artifacts
 that make it all work faster and better.
 
 <p>
-    <a href="https://central.sonatype.com/artifact/io.sindri/sindri"><img src="https://img.shields.io/maven-central/v/io.sindri/sindri?label=Maven%20Central" alt="Latest Stable Version"></a>
+    <a href="https://central.sonatype.com/artifact/io.valkyrja/sindri"><img src="https://img.shields.io/maven-central/v/io.valkyrja/sindri?label=Maven%20Central" alt="Latest Stable Version"></a>
     <a href="https://github.com/valkyrjaio/sindri-java"><img src="https://img.shields.io/badge/Java-21--25-orange" alt="Java Version"></a>
     <a href="https://github.com/valkyrjaio/sindri-java/blob/26.x/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
     <a href="https://github.com/valkyrjaio/sindri-java/actions/workflows/ci.yml?query=branch%3A26.x"><img src="https://github.com/valkyrjaio/sindri-java/actions/workflows/ci.yml/badge.svg?branch=26.x" alt="CI Status"></a>
