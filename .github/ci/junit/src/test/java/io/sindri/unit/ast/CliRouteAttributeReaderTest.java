@@ -123,4 +123,13 @@ public class CliRouteAttributeReaderTest {
 
         org.junit.jupiter.api.Assertions.assertFalse(supplier.contains("java.util.List.of("));
     }
+
+    @Test
+    void readFile_noTypeDeclaration_throws() {
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath("Cli/Controller/TestNoTypeCliControllerFile.java")));
+    }
 }

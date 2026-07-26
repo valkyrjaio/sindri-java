@@ -13,7 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import io.sindri.ast.MiddlewareClassifier;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -123,5 +125,116 @@ final class MiddlewareClassifierTest {
         var sources = Map.of("p.Opaque", "package p; class Opaque extends some.Unknown {}");
 
         assertTrue(classifier.classify("p.Opaque", resolver(sources), TARGETS).isEmpty());
+    }
+
+    @Test
+    void visitsAnAncestorReachedByTwoPathsOnlyOnce() {
+        // Diamond: Both IA and IB extend Mid, so Mid is queued twice — the second pop is skipped.
+        var sources =
+                Map.of(
+                        "p.Diamond", "package p; class Diamond implements p.IA, p.IB {}",
+                        "p.IA", "package p; interface IA extends p.Mid {}",
+                        "p.IB", "package p; interface IB extends p.Mid {}",
+                        "p.Mid",
+                                "package p; import v.RouteMatchedMiddlewareContract;"
+                                        + " interface Mid extends RouteMatchedMiddlewareContract {}");
+
+        assertEquals(Set.of(MATCHED), classifier.classify("p.Diamond", resolver(sources), TARGETS));
+    }
+
+    @Test
+    void stopsAtAResolvedSourceWithNoClassOrInterfaceDeclaration() {
+        // The ancestor resolves to a source, but it declares an enum, not a class/interface.
+        var sources =
+                Map.of(
+                        "p.Uses", "package p; class Uses extends p.E {}",
+                        "p.E", "package p; enum E {}");
+
+        assertTrue(classifier.classify("p.Uses", resolver(sources), TARGETS).isEmpty());
+    }
+
+    @Test
+    void classifiesAnAncestorInTheDefaultPackage() {
+        // No package on the class, and a bare ancestor name — exercises the empty-package branch.
+        var sources = Map.of("Default", "class Default implements RouteMatchedMiddlewareContract {}");
+
+        assertTrue(classifier.classify("Default", resolver(sources), TARGETS).isEmpty());
+    }
+
+    @Test
+    void ignoresAMarkerMiddlewareAnnotationWithoutArguments() {
+        MethodDeclaration method =
+                StaticJavaParser.parse("package p; class C { @Middleware void m() {} }")
+                        .findFirst(MethodDeclaration.class)
+                        .orElseThrow();
+
+        assertTrue(
+                classifier
+                        .classifyMethod(method, Map.of(), "p", resolver(Map.of()), TARGETS)
+                        .isEmpty());
+    }
+
+    @Test
+    void ignoresAMiddlewarePairThatIsNotAClassNamedName() {
+        // Two pairs cover both guard operands: a non-"name" pair, and a "name" pair whose value is
+        // not a class literal.
+        MethodDeclaration method =
+                StaticJavaParser.parse(
+                                "package p; class C {"
+                                        + " @Middleware(name = \"notAClass\", other = Foo.class)"
+                                        + " void m() {} }")
+                        .findFirst(MethodDeclaration.class)
+                        .orElseThrow();
+
+        assertTrue(
+                classifier
+                        .classifyMethod(method, Map.of(), "p", resolver(Map.of()), TARGETS)
+                        .isEmpty());
+    }
+
+    @Test
+    void ignoresStaticWildcardImportsWhenGatheringWildcardPackages() {
+        // A static wildcard import is not a type-name wildcard, so it must not be treated as one;
+        // the class still resolves its stage through the regular single-type import.
+        var sources =
+                Map.of(
+                        "p.Wild",
+                        "package p; import static v.Helpers.*;"
+                                + " import v.RouteMatchedMiddlewareContract;"
+                                + " class Wild implements RouteMatchedMiddlewareContract {}");
+
+        assertEquals(Set.of(MATCHED), classifier.classify("p.Wild", resolver(sources), TARGETS));
+    }
+
+    @Test
+    void ignoresNonAnnotationEntriesInAMiddlewaresContainer() {
+        // A @Middlewares array element that is not itself an annotation is skipped.
+        MethodDeclaration method =
+                StaticJavaParser.parse(
+                                "package p; class C { @Middlewares({\"notAnAnnotation\"}) void m() {}"
+                                        + " }")
+                        .findFirst(MethodDeclaration.class)
+                        .orElseThrow();
+
+        assertTrue(
+                classifier
+                        .classifyMethod(method, Map.of(), "p", resolver(Map.of()), TARGETS)
+                        .isEmpty());
+    }
+
+    @Test
+    void classifiesADefaultPackageMiddlewareClassByItsSimpleName() {
+        // No package (pkg == "") and a simple-name middleware class exercises the empty-package
+        // branch in the annotation reader; the class is unresolvable so no stage is matched.
+        MethodDeclaration method =
+                StaticJavaParser.parse("class C { @Middleware(name = Simple.class) void m() {} }")
+                        .findFirst(MethodDeclaration.class)
+                        .orElseThrow();
+
+        List<String> matched =
+                classifier
+                        .classifyMethod(method, Map.of(), "", resolver(Map.of()), TARGETS)
+                        .getOrDefault(MATCHED, List.of());
+        assertTrue(matched.isEmpty());
     }
 }
