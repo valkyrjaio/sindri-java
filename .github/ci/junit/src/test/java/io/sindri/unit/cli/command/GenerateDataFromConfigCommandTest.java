@@ -12,11 +12,16 @@ package io.sindri.unit.cli.command;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.sindri.cli.command.GenerateDataFromConfigCommand;
+import io.sindri.generator.container.contract.ContainerDataFileGeneratorContract;
+import io.sindri.generator.enum_.GenerateStatus;
+import io.sindri.generator.throwable.exception.DataFileWriteException;
 import io.valkyrja.cli.interaction.output.factory.OutputFactory;
 import io.valkyrja.cli.interaction.output.factory.contract.OutputFactoryContract;
 import io.valkyrja.cli.routing.data.contract.ArgumentParameterContract;
@@ -241,6 +246,7 @@ final class GenerateDataFromConfigCommandTest {
                 import io.valkyrja.http.message.enum_.RequestMethod;
                 import io.valkyrja.http.routing.attribute.Parameter;
                 import io.valkyrja.http.routing.attribute.Route;
+                import io.valkyrja.http.routing.attribute.route.Middleware;
                 import io.valkyrja.http.routing.attribute.route.RouteHandler;
                 import io.valkyrja.http.routing.constant.Regex;
 
@@ -273,6 +279,18 @@ final class GenerateDataFromConfigCommandTest {
                     @Parameter(name = "y", regex = Regex.NUM)
                     @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void bad() {}
+
+                    // Two @Middleware whose classes cannot be resolved: MissingMiddleware is under
+                    // the app namespace but has no source file (parse throws FileNotFoundException),
+                    // and ext.NoMiddleware is off both the app tree and the classpath (empty path).
+                    // Both exercise the middleware source resolver's unresolvable branches; neither
+                    // reaches a stage, so the route stays short-form.
+                    @Route(path = "/guarded", name = "guarded")
+                    @Middleware(name = AppGuardMiddleware.class)
+                    @Middleware(name = MissingMiddleware.class)
+                    @Middleware(name = ext.NoMiddleware.class)
+                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    public static void guarded() {}
                 }
                 """);
 
@@ -325,6 +343,17 @@ final class GenerateDataFromConfigCommandTest {
                         return null;
                     }
                 }
+                """);
+
+        // A resolvable @Middleware whose source parses cleanly but reaches no stage contract — it
+        // exercises the resolver's successful-parse branch without changing the guarded route shape.
+        writeFixture(
+                appDir,
+                "AppGuardMiddleware.java",
+                """
+                package app;
+
+                public final class AppGuardMiddleware {}
                 """);
 
         return appDir;
@@ -634,5 +663,30 @@ final class GenerateDataFromConfigCommandTest {
         }
 
         assertTrue(buffer.toString(StandardCharsets.UTF_8).contains(RuntimeException.class.getName()));
+    }
+
+    @Test
+    void runThrowsWhenADataFileFailsToWrite(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var container = new Container();
+        container.setSingleton(OutputFactoryContract.class, new OutputFactory());
+        var route = mock(RouteContract.class);
+        // The container data generator reports FAILURE, so run() must surface it rather than
+        // silently leaving a stale data class on disk.
+        var command =
+                new GenerateDataFromConfigCommand(container, route) {
+                    @Override
+                    protected ContainerDataFileGeneratorContract getContainerDataFileGenerator() {
+                        var generator = mock(ContainerDataFileGeneratorContract.class);
+                        when(generator.generateFile(any(), any(), any(), any()))
+                                .thenReturn(GenerateStatus.FAILURE);
+
+                        return generator;
+                    }
+                };
+
+        assertThrows(
+                DataFileWriteException.class,
+                () -> command.run(appDir.resolve("AppConfig.java").toString()));
     }
 }

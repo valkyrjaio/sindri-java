@@ -121,4 +121,13 @@ public class ServiceProviderReaderTest {
         assertTrue(result.publishers().isEmpty());
     }
 
+    @Test
+    void readFile_noTypeDeclaration_throws() {
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath(
+                                        "Container/Provider/TestNoTypeServiceProviderFile.java")));
+    }
 }

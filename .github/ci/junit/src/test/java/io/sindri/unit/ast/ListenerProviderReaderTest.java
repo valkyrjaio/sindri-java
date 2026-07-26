@@ -88,4 +88,12 @@ public class ListenerProviderReaderTest {
                         .isEmpty());
     }
 
+    @Test
+    void readFile_noTypeDeclaration_throws() {
+        org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath("Event/Provider/TestNoTypeListenerProviderFile.java")));
+    }
 }
