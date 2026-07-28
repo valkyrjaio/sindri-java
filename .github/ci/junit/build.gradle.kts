@@ -10,7 +10,7 @@
 plugins {
     java
     jacoco
-    id("com.github.ben-manes.versions") version "0.54.0"
+    id("com.github.ben-manes.versions") version "0.56.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
@@ -37,7 +37,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation("io.valkyrja:valkyrja:26.3.0")
+    implementation("io.valkyrja:valkyrja:26.4.0")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
