@@ -1,6 +1,10 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.1...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.2...26.x)
+
+## [v26.4.2](https://github.com/valkyrjaio/sindri-java/compare/v26.4.1...v26.4.2) - 2026-07-28
+
+* [Generator] Refresh the golden snapshots via a GOLDEN_UPDATE environment switch by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/57
 
 ## [v26.4.1](https://github.com/valkyrjaio/sindri-java/compare/v26.4.0...v26.4.1) - 2026-07-28
 
