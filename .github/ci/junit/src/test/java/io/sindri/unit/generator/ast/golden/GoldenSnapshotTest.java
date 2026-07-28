@@ -46,9 +46,9 @@ import org.junit.jupiter.api.io.TempDir;
  * (for example dropping the PCRE delimiters around {@code ^...$}) fails here instead of silently
  * changing every generated cache.
  *
- * <p>To refresh the goldens after an intentional generator change, temporarily re-add the
- * {@code Files.writeString(golden, actual)} line in {@link #assertGolden} (see git history), run the
- * suite once, then remove it again.
+ * <p>To refresh the goldens after an intentional generator change, run this suite with
+ * {@code GOLDEN_UPDATE=1} set — each {@code src/test/resources/golden/*.golden} is rewritten from
+ * the matching generator output — then review and commit the new snapshots.
  */
 final class GoldenSnapshotTest {
 
@@ -154,9 +154,18 @@ final class GoldenSnapshotTest {
                 regex);
     }
 
+    /**
+     * Compare the generated source against the committed golden, refreshing it first when
+     * {@code GOLDEN_UPDATE=1} is set (mirroring the TypeScript port's snapshot switch).
+     */
     private static void assertGolden(Path generated, String goldenName) throws IOException {
         String actual = Files.readString(generated);
         Path golden = Path.of("src/test/resources/golden", goldenName);
+
+        if ("1".equals(System.getenv("GOLDEN_UPDATE"))) {
+            Files.writeString(golden, actual);
+        }
+
         assertEquals(Files.readString(golden), actual);
     }
 }
