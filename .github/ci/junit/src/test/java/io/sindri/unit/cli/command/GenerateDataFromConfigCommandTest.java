@@ -208,8 +208,10 @@ final class GenerateDataFromConfigCommandTest {
                                 new Route("/manual", "manual", AppHttpRouteProvider::getHandler,
                                         List.of(RequestMethod.PUT), List.of(), List.of(), List.of(),
                                         List.of(), List.of(), null, null),
+                                // A hand-written regex is passed through verbatim, so it uses the
+                                // Java-native anchored form the framework itself now emits.
                                 new DynamicRoute("/manual/{id}", "manual.show",
-                                        "/^\\\\/manual\\\\/(?<id>\\\\d+)$/", List.of(),
+                                        "^\\\\/manual\\\\/(?<id>\\\\d+)$", List.of(),
                                         AppHttpRouteProvider::getHandler),
                                 // A non-string name (arg 1) cannot be keyed, so this is skipped.
                                 new Route("/skip", NoName.VALUE, AppHttpRouteProvider::getHandler),
