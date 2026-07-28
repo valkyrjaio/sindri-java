@@ -1,6 +1,14 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.3.0...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.0...26.x)
+
+## [v26.4.0](https://github.com/valkyrjaio/sindri-java/compare/v26.3.0...v26.4.0) - 2026-07-27
+
+* [Gradle] Use the vanniktech publishToMavenCentral() API without SonatypeHost by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/49
+* [Documentation] Correct Maven Central group ID in installation instructions by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/50
+* [Sindri] Restore 100% line coverage with follow-up tests by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/51
+* [GitHub] Update .github workflow refs to v26.12.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/52
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/53
 
 ## [v26.3.0](https://github.com/valkyrjaio/sindri-java/compare/v26.2.0...v26.3.0) - 2026-07-25
 
