@@ -39,6 +39,15 @@ import org.junit.jupiter.api.io.TempDir;
 /** Drives {@link GenerateDataFromConfigCommand} end-to-end against a self-consistent app tree. */
 final class GenerateDataFromConfigCommandTest {
 
+    /**
+     * The full regex the framework Processor computes for {@code /show/{value}} with a
+     * {@code Regex.ALPHA} parameter, exactly as it is escaped into the generated Java source. Pinned
+     * whole rather than by its {@code (?<value>…)} fragment so a change to the framework's regex
+     * framing — anchors, or the PCRE {@code /…/} delimiters it once carried — fails here instead of
+     * silently changing every generated cache.
+     */
+    private static final String EXPECTED_SHOW_REGEX = "\"^\\\\/show\\\\/(?<value>[a-zA-Z]+)$\"";
+
     private static void writeFixture(Path appDir, String name, String contents) throws IOException {
         Files.writeString(appDir.resolve(name), contents, StandardCharsets.UTF_8);
     }
@@ -507,8 +516,8 @@ final class GenerateDataFromConfigCommandTest {
                 () -> "parameter regex not resolved from Regex constant:\n" + http);
         // ...and the full match regex precomputed by the framework Processor.
         assertTrue(
-                http.contains("(?<value>[a-zA-Z]+)"),
-                () -> "computed route regex missing:\n" + http);
+                http.contains(EXPECTED_SHOW_REGEX),
+                () -> "computed route regex missing/incorrect:\n" + http);
 
         // dynamicPaths() maps the dynamic path to its route name.
         assertTrue(
@@ -519,8 +528,8 @@ final class GenerateDataFromConfigCommandTest {
         // everything from its declaration to EOF is its body.
         String regexesBlock = http.substring(http.indexOf("regexes()"));
         assertTrue(
-                regexesBlock.contains("(?<value>[a-zA-Z]+)"),
-                () -> "regexes() not populated:\n" + http);
+                regexesBlock.contains(EXPECTED_SHOW_REGEX),
+                () -> "regexes() not populated with the computed regex:\n" + http);
 
         // The whole file must be syntactically valid Java — catches malformed suppliers or bad
         // regex/string escaping that substring checks would miss.

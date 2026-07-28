@@ -39,6 +39,8 @@ public record AppHttpRoutingData() implements HttpRoutingDataContract {
 
     @Override
     public Map<String, Map<String, String>> regexes() {
-        return Map.of();
+        return Map.ofEntries(
+            Map.entry("GET", Map.of("^\\/users\\/(?<id>[0-9]+)$", "users.show"))
+        );
     }
 }
