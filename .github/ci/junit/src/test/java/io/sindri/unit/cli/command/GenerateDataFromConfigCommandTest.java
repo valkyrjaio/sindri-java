@@ -632,6 +632,101 @@ final class GenerateDataFromConfigCommandTest {
     }
 
     @Test
+    void applicationPublishersWinOverTheFrameworkForTheSameService(@TempDir Path tmp)
+            throws IOException {
+        Path appDir = writeAppOverridingAFrameworkService(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String container =
+                Files.readString(appDir.resolve("data").resolve("AppContainerData.java"));
+
+        // The application and the framework both publish vendor.FrameworkService. Publishers merge
+        // last-wins, and a provider is merged after everything it nests, so the application's entry
+        // must be the one that survives. Letting the framework win here silently discards the
+        // generated cache the application meant to use.
+        assertTrue(
+                container.contains("app.AppServiceProvider::publishOverriddenService"),
+                () -> "the application publisher lost to the framework's:\n" + container);
+        assertFalse(
+                container.contains("vendor.FrameworkServiceProvider::publishFrameworkService"),
+                () -> "the framework publisher shadowed the application's:\n" + container);
+    }
+
+    /** An app whose service provider publishes the very service the framework also publishes. */
+    private static Path writeAppOverridingAFrameworkService(Path tmp) throws IOException {
+        Path appDir = Files.createDirectories(tmp.resolve("app"));
+
+        writeFixture(
+                appDir,
+                "AppConfig.java",
+                """
+                package app;
+
+                import java.util.List;
+
+                public final class AppConfig {
+                    public AppConfig() {
+                        this(
+                                "app", "ud", "v", "env", true, "UTC", "secret",
+                                "app/data", "app.data",
+                                List.of(new AppComponentProvider()), List.of());
+                    }
+
+                    public AppConfig(
+                            String namespace, String userDir, String version, String env,
+                            boolean debug, String timezone, String secret, String dataPath,
+                            String dataNamespace, List<Object> providers, List<Object> publishers) {}
+                }
+                """);
+
+        writeFixture(
+                appDir,
+                "AppComponentProvider.java",
+                """
+                package app;
+
+                import java.util.List;
+
+                public final class AppComponentProvider {
+                    public List<Object> getComponentProviders(Object app) {
+                        return List.of(new vendor.FrameworkComponentProvider());
+                    }
+
+                    public List<Object> getContainerProviders(Object app) {
+                        return List.of(new AppServiceProvider());
+                    }
+                }
+                """);
+
+        writeFixture(
+                appDir,
+                "AppServiceProvider.java",
+                """
+                package app;
+
+                import java.util.Map;
+
+                public final class AppServiceProvider {
+                    public Map<Class<?>, Object> publishers() {
+                        return Map.of(
+                                vendor.FrameworkService.class,
+                                AppServiceProvider::publishOverriddenService);
+                    }
+
+                    public static void publishOverriddenService(Object container) {}
+                }
+                """);
+
+        return appDir;
+    }
+
+    @Test
     void reportsFailureWhenConfigCannotBeRead(@TempDir Path tmp) {
         var original = System.out;
         var buffer = new ByteArrayOutputStream();

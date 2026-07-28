@@ -151,30 +151,53 @@ public abstract class GenerateDataFromAst {
 
     private ComponentProviderResult collectProviderData(ConfigResult config) {
         ComponentProviderResult combined = new ComponentProviderResult();
-
-        // Walk the full component-provider graph breadth-first. Each provider can nest further
-        // component providers (e.g. an app provider pulling in framework providers, which pull in
-        // their own), so recurse to any depth, guarding against cycles with a visited set.
-        java.util.Deque<String> queue = new java.util.ArrayDeque<>(config.providers());
         java.util.Set<String> visited = new java.util.HashSet<>();
 
-        while (!queue.isEmpty()) {
-            String providerFqn = queue.poll();
-            if (!visited.add(providerFqn)) {
-                continue;
-            }
-
-            String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
-            if (filePath.isEmpty()) {
-                continue;
-            }
-
-            ComponentProviderResult data = componentProviderReader.readFile(filePath);
-            combined = combined.merge(data);
-            queue.addAll(data.componentProviders());
+        for (String providerFqn : config.providers()) {
+            combined = combined.merge(walkProvider(providerFqn, config, visited));
         }
 
         return combined;
+    }
+
+    /**
+     * Walk a component provider and everything it nests, depth first.
+     *
+     * <p>Each provider's own service providers are merged <em>after</em> the ones it nests, so a
+     * provider always takes precedence over the providers it pulls in. That ordering is what makes
+     * an application's publishers win over the framework's for the same service: publishers merge
+     * last-wins, and the application provider — which nests the framework's component providers —
+     * is merged last. Collecting the other way round lets a framework publisher shadow the
+     * application's, which silently discards the generated cache the application meant to use.
+     *
+     * <p>A visited set guards against cycles, so a provider reached twice is walked once.
+     *
+     * @param providerFqn the component provider to walk
+     * @param config the application configuration
+     * @param visited the providers already walked
+     * @return the aggregated provider data, nested providers first
+     */
+    private ComponentProviderResult walkProvider(
+            String providerFqn, ConfigResult config, java.util.Set<String> visited) {
+        ComponentProviderResult aggregated = new ComponentProviderResult();
+
+        if (!visited.add(providerFqn)) {
+            return aggregated;
+        }
+
+        String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
+
+        if (filePath.isEmpty()) {
+            return aggregated;
+        }
+
+        ComponentProviderResult data = componentProviderReader.readFile(filePath);
+
+        for (String subProvider : data.componentProviders()) {
+            aggregated = aggregated.merge(walkProvider(subProvider, config, visited));
+        }
+
+        return aggregated.merge(data);
     }
 
     private Map<String, String[]> collectPublishers(
