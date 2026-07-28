@@ -11,14 +11,21 @@ package io.sindri.unit.generator.ast.golden;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import io.sindri.ast.data.HttpParameterData;
 import io.sindri.ast.data.HttpRouteData;
 import io.sindri.generator.ast.cli.AstCliDataFileGenerator;
 import io.sindri.generator.ast.container.AstContainerDataFileGenerator;
 import io.sindri.generator.ast.event.AstEventDataFileGenerator;
 import io.sindri.generator.ast.http.AstHttpDataFileGenerator;
+import io.valkyrja.http.routing.data.DynamicRoute;
+import io.valkyrja.http.routing.data.Parameter;
+import io.valkyrja.http.routing.data.contract.DynamicRouteContract;
+import io.valkyrja.http.routing.data.contract.ParameterContract;
+import io.valkyrja.http.routing.processor.Processor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +37,14 @@ import org.junit.jupiter.api.io.TempDir;
  * tests (which assert individual substrings), these pin the ENTIRE emitted source against a committed
  * golden file, so any change to the generated shape — spacing, ordering, imports, wrappers — is caught
  * and must be an intentional golden update.
+ *
+ * <p>The HTTP inputs exercise the meaningful structure: a GET/POST split plus a dynamic
+ * {@code /users/{id}} route carrying a parameter, so {@code routes}, {@code paths},
+ * {@code dynamicPaths} and {@code regexes} all populate. The dynamic route's regex is computed by
+ * the real framework {@link Processor} — exactly as {@code HttpRouteAttributeReader} does in
+ * production — so the golden pins the regex the framework actually emits and a change to its format
+ * (for example dropping the PCRE delimiters around {@code ^...$}) fails here instead of silently
+ * changing every generated cache.
  *
  * <p>To refresh the goldens after an intentional generator change, temporarily re-add the
  * {@code Files.writeString(golden, actual)} line in {@link #assertGolden} (see git history), run the
@@ -48,7 +63,13 @@ final class GoldenSnapshotTest {
 
         Map<String, HttpRouteData> routeData = new LinkedHashMap<>();
         routeData.put("users.index", new HttpRouteData("/users", "users.index", List.of("GET")));
-        routeData.put("users.show", new HttpRouteData("/users/{id}", "users.show", List.of("GET")));
+        routeData.put(
+                "users.show",
+                dynamicRouteData(
+                        "/users/{id}",
+                        "users.show",
+                        List.of("GET"),
+                        new HttpParameterData("id", "[0-9]+")));
         routeData.put("users.store", new HttpRouteData("/users", "users.store", List.of("POST")));
 
         new AstHttpDataFileGenerator()
@@ -91,6 +112,46 @@ final class GoldenSnapshotTest {
         new AstEventDataFileGenerator().generateFile(dir.toString(), "AppEventData", PKG, listeners);
 
         assertGolden(dir.resolve("AppEventData.java"), "AppEventData.golden");
+    }
+
+    /**
+     * Build a dynamic route whose match regex is precomputed by the framework {@link Processor},
+     * mirroring what {@code HttpRouteAttributeReader} stores for an annotated dynamic route.
+     */
+    private static HttpRouteData dynamicRouteData(
+            String path, String name, List<String> requestMethods, HttpParameterData... parameters) {
+        List<ParameterContract> frameworkParameters = new ArrayList<>();
+        for (HttpParameterData parameter : parameters) {
+            frameworkParameters.add(new Parameter(parameter.name(), parameter.regex()));
+        }
+
+        // The handler is never invoked — the Processor only rewrites the path into a regex.
+        DynamicRoute route =
+                new DynamicRoute(
+                        path,
+                        name,
+                        "",
+                        frameworkParameters,
+                        (container, dispatched) -> {
+                            throw new AssertionError("unreachable");
+                        });
+        String regex = ((DynamicRouteContract) new Processor().route(route)).getRegex();
+
+        return new HttpRouteData(
+                path,
+                name,
+                null,
+                requestMethods,
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                null,
+                null,
+                true,
+                List.of(parameters),
+                regex);
     }
 
     private static void assertGolden(Path generated, String goldenName) throws IOException {
