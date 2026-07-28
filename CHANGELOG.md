@@ -1,6 +1,12 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.0...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.1...26.x)
+
+## [v26.4.1](https://github.com/valkyrjaio/sindri-java/compare/v26.4.0...v26.4.1) - 2026-07-28
+
+* [Http] Pin the framework-computed dynamic route regex in the golden and end-to-end tests by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/54
+* [Sindri] Merge a provider's own publishers after the ones it nests by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/55
+* [Http] Use the Java-native anchored regex form in the imperative route fixture by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/56
 
 ## [v26.4.0](https://github.com/valkyrjaio/sindri-java/compare/v26.3.0...v26.4.0) - 2026-07-27
 
