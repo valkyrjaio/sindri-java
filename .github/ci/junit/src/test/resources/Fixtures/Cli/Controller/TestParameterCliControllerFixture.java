@@ -39,4 +39,13 @@ public class TestParameterCliControllerFixture {
             mode = OptionMode.OPTIONAL,
             valueMode = OptionValueMode.NONE)
     public static void build() {}
+
+    @Route(name = "flag-only", description = "Only a flag")
+    @RouteHandler(handlerClass = TestCliRouteProviderFixture.class, handlerMethod = "greetHandler")
+    @OptionParameter(
+            name = "flag",
+            description = "A flag",
+            mode = OptionMode.OPTIONAL,
+            valueMode = OptionValueMode.NONE)
+    public static void flagOnly() {}
 }

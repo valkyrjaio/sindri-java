@@ -103,4 +103,140 @@ final class CliRouteParameterReaderTest {
         assertEquals("name", arguments.get(0).name());
         assertEquals("REQUIRED", arguments.get(0).mode());
     }
+
+    /** Parse a throwaway method carrying the given annotation source. */
+    private MethodDeclaration annotated(String annotations) {
+        return StaticJavaParser.parseBodyDeclaration(annotations + " public static void run() {}")
+                .asMethodDeclaration();
+    }
+
+    @Test
+    void readsParametersDeclaredThroughTheirContainerAnnotation() {
+        var method =
+                annotated(
+                        """
+                        @ArgumentParameters({
+                            @ArgumentParameter(name = "a", description = "A",
+                                mode = ArgumentMode.REQUIRED,
+                                valueMode = ArgumentValueMode.DEFAULT),
+                            @ArgumentParameter(name = "b", description = "B",
+                                mode = ArgumentMode.OPTIONAL,
+                                valueMode = ArgumentValueMode.ARRAY)
+                        })
+                        @OptionParameters({
+                            @OptionParameter(name = "o", description = "O",
+                                mode = OptionMode.OPTIONAL,
+                                valueMode = OptionValueMode.NONE)
+                        })
+                        """);
+
+        List<CliArgumentParameterData> arguments = reader.updateArguments(method, Map.of(), "pkg");
+        assertEquals(2, arguments.size());
+        assertEquals("a", arguments.get(0).name());
+        assertEquals("ARRAY", arguments.get(1).valueMode());
+
+        List<CliOptionParameterData> options = reader.updateOptions(method, Map.of(), "pkg");
+        assertEquals(1, options.size());
+        assertEquals("o", options.get(0).name());
+    }
+
+    @Test
+    void readsAContainerAnnotationWrittenWithAnExplicitValueMember() {
+        var method =
+                annotated(
+                        """
+                        @ArgumentParameters(unknown = 1, value = {
+                            @ArgumentParameter(name = "a", description = "A")
+                        })
+                        """);
+
+        List<CliArgumentParameterData> arguments = reader.updateArguments(method, Map.of(), "pkg");
+
+        assertEquals(1, arguments.size());
+        assertEquals("a", arguments.get(0).name());
+    }
+
+    @Test
+    void readsASingleContainedAnnotationNotWrappedInAnArray() {
+        var method =
+                annotated("@OptionParameters(@OptionParameter(name = \"o\", description = \"O\"))");
+
+        List<CliOptionParameterData> options = reader.updateOptions(method, Map.of(), "pkg");
+
+        assertEquals(1, options.size());
+        assertEquals("o", options.get(0).name());
+    }
+
+    @Test
+    void readsNothingFromAContainerAnnotationWithNothingToUnwrap() {
+        // A marker container names no value at all, and an array holding something that is not an
+        // annotation has nothing to contribute.
+        assertTrue(
+                reader.updateArguments(annotated("@ArgumentParameters"), Map.of(), "pkg")
+                        .isEmpty());
+        assertTrue(
+                reader.updateOptions(annotated("@OptionParameters({1})"), Map.of(), "pkg")
+                        .isEmpty());
+    }
+
+    @Test
+    void readsNothingFromAParameterAnnotationThatNamesNoMembers() {
+        assertTrue(
+                reader.updateArguments(annotated("@ArgumentParameter"), Map.of(), "pkg").isEmpty());
+        assertTrue(reader.updateOptions(annotated("@OptionParameter"), Map.of(), "pkg").isEmpty());
+    }
+
+    @Test
+    void readsNothingFromAParameterAnnotationThatNamesNoName() {
+        // An unrecognized member is ignored, and without a name there is no parameter to build.
+        assertTrue(
+                reader.updateArguments(
+                                annotated("@ArgumentParameter(description = \"d\", unknown = 1)"),
+                                Map.of(),
+                                "pkg")
+                        .isEmpty());
+        assertTrue(
+                reader.updateOptions(
+                                annotated("@OptionParameter(description = \"d\", unknown = 1)"),
+                                Map.of(),
+                                "pkg")
+                        .isEmpty());
+    }
+
+    @Test
+    void readsShortNamesAndValidValuesWrittenAsASingleString() {
+        var method =
+                annotated(
+                        "@OptionParameter(name = \"o\", description = \"O\", shortNames = \"f\","
+                                + " validValues = \"json\")");
+
+        CliOptionParameterData option = reader.updateOptions(method, Map.of(), "pkg").get(0);
+
+        assertEquals(List.of("f"), option.shortNames());
+        assertEquals(List.of("json"), option.validValues());
+    }
+
+    @Test
+    void readsEnumMembersWrittenWithoutTheirType() {
+        // A statically imported enum constant parses as a bare name rather than a field access.
+        var method =
+                annotated(
+                        "@ArgumentParameter(name = \"a\", description = \"A\", mode = REQUIRED,"
+                                + " valueMode = ARRAY)");
+
+        CliArgumentParameterData argument = reader.updateArguments(method, Map.of(), "pkg").get(0);
+
+        assertEquals("REQUIRED", argument.mode());
+        assertEquals("ARRAY", argument.valueMode());
+    }
+
+    @Test
+    void fallsBackToAnEnumMembersSourceWhenItIsNeitherANameNorAFieldAccess() {
+        var method =
+                annotated("@ArgumentParameter(name = \"a\", description = \"A\", mode = modeOf())");
+
+        CliArgumentParameterData argument = reader.updateArguments(method, Map.of(), "pkg").get(0);
+
+        assertEquals("modeOf()", argument.mode());
+    }
 }
