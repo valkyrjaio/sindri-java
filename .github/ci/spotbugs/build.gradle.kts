@@ -38,6 +38,12 @@ sourceSets {
             srcDirs("../../../src/main/java")
         }
     }
+    // The JUnit build's tests are the repo's other Java source tree; analyze them too.
+    test {
+        java {
+            srcDirs("../junit/src/test/java")
+        }
+    }
 }
 
 dependencies {
@@ -49,6 +55,12 @@ dependencies {
     implementation("io.valkyrja:valkyrja:26.4.0")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.0")
+
+    // Mirrors the JUnit build's test classpath — needed only so the tests compile here.
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation("org.mockito:mockito-core:5.23.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    testImplementation("org.jspecify:jspecify:1.0.0")
 }
 
 spotbugs {
@@ -74,4 +86,16 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<SpotBugsTask>().configureEach {
     reports.create("html")
+}
+
+// Analyzing the tests is the point — running them is the JUnit build's job, so `check` still runs
+// spotbugsTest without executing the suite twice.
+tasks.test {
+    enabled = false
+}
+
+// The test tree gets its own filter so `src` stays strict — the JUnit/fixture idioms excluded for
+// the tests can never loosen the tool's own analysis.
+tasks.spotbugsTest {
+    excludeFilter.set(layout.projectDirectory.file("spotbugs-exclude-test.xml"))
 }
