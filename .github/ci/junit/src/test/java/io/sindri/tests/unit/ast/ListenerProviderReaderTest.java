@@ -27,7 +27,7 @@ public final class ListenerProviderReaderTest {
     @Test
     void readFile_parsesListenerCount() {
         ListenerProviderResult result =
-                reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"));
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderFixture.java"));
 
         assertEquals(1, result.listenerClasses().size());
         assertEquals(1, result.listeners().size());
@@ -36,7 +36,7 @@ public final class ListenerProviderReaderTest {
     @Test
     void readFile_parsesListenerClass() {
         ListenerProviderResult result =
-                reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"));
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderFixture.java"));
 
         assertEquals("io.valkyrja.event.data.Listener", result.listenerClasses().get(0));
     }
@@ -44,7 +44,8 @@ public final class ListenerProviderReaderTest {
     @Test
     void readFile_noGetListenersMethod_returnsEmpty() {
         ListenerProviderResult result =
-                reader.readFile(fixturePath("Event/Provider/TestEmptyListenerProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Event/Provider/TestEmptyListenerProviderFixture.java"));
 
         assertTrue(result.listenerClasses().isEmpty());
         assertTrue(result.listeners().isEmpty());
@@ -54,7 +55,7 @@ public final class ListenerProviderReaderTest {
     void readFile_getListenersThrows_returnsEmpty() {
         ListenerProviderResult result =
                 reader.readFile(
-                        fixturePath("Event/Provider/TestNoReturnListenerProviderClass.java"));
+                        fixturePath("Event/Provider/TestNoReturnListenerProviderFixture.java"));
 
         assertTrue(result.listenerClasses().isEmpty());
         assertTrue(result.listeners().isEmpty());
@@ -74,7 +75,7 @@ public final class ListenerProviderReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"))
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderFixture.java"))
                         .listenerClasses()
                         .isEmpty());
     }
@@ -91,7 +92,7 @@ public final class ListenerProviderReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Event/Provider/TestListenerProviderClass.java"))
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderFixture.java"))
                         .listenerClasses()
                         .isEmpty());
     }
@@ -102,6 +103,7 @@ public final class ListenerProviderReaderTest {
                 RuntimeException.class,
                 () ->
                         reader.readFile(
-                                fixturePath("Event/Provider/TestNoTypeListenerProviderFile.java")));
+                                fixturePath(
+                                        "Event/Provider/TestNoTypeListenerProviderFileFixture.java")));
     }
 }

@@ -33,7 +33,7 @@ public final class HttpRouteAttributeReaderTest {
     @Test
     void readFile_parsesAllRoutes() {
         HttpRouteAttributeResult result =
-                reader.readFile(fixturePath("Http/Controller/TestHttpControllerClass.java"));
+                reader.readFile(fixturePath("Http/Controller/TestHttpControllerFixture.java"));
 
         assertEquals(3, result.routeData().size());
     }
@@ -41,7 +41,7 @@ public final class HttpRouteAttributeReaderTest {
     @Test
     void readFile_parsesGetRoute() {
         HttpRouteAttributeResult result =
-                reader.readFile(fixturePath("Http/Controller/TestHttpControllerClass.java"));
+                reader.readFile(fixturePath("Http/Controller/TestHttpControllerFixture.java"));
 
         HttpRouteData getRoute = result.routeData().get("test.get");
         assertNotNull(getRoute);
@@ -49,7 +49,7 @@ public final class HttpRouteAttributeReaderTest {
         assertEquals(List.of("GET"), getRoute.requestMethods());
         assertNotNull(getRoute.handler());
         assertEquals(
-                "io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderClass",
+                "io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderFixture",
                 getRoute.handler().handlerClass());
         assertEquals("getHandler", getRoute.handler().method());
     }
@@ -57,7 +57,7 @@ public final class HttpRouteAttributeReaderTest {
     @Test
     void readFile_parsesMultipleRoutesOnOneMethod() {
         HttpRouteAttributeResult result =
-                reader.readFile(fixturePath("Http/Controller/TestHttpControllerClass.java"));
+                reader.readFile(fixturePath("Http/Controller/TestHttpControllerFixture.java"));
 
         long getMethodRoutes =
                 result.routeData().values().stream()
@@ -74,7 +74,7 @@ public final class HttpRouteAttributeReaderTest {
     @Test
     void readFile_parsesPostRoute() {
         HttpRouteAttributeResult result =
-                reader.readFile(fixturePath("Http/Controller/TestHttpControllerClass.java"));
+                reader.readFile(fixturePath("Http/Controller/TestHttpControllerFixture.java"));
 
         HttpRouteData postRoute = result.routeData().get("test.post");
         assertNotNull(postRoute);
@@ -87,7 +87,8 @@ public final class HttpRouteAttributeReaderTest {
     @Test
     void readFile_withNoRouteMethod_returnsEmpty() {
         HttpRouteAttributeResult result =
-                reader.readFile(fixturePath("Http/Controller/TestNoRouteHttpControllerClass.java"));
+                reader.readFile(
+                        fixturePath("Http/Controller/TestNoRouteHttpControllerFixture.java"));
 
         assertTrue(result.routeData().isEmpty());
     }
@@ -96,7 +97,8 @@ public final class HttpRouteAttributeReaderTest {
     void readFile_withRouteButNoRouteHandler_handlerIsNull() {
         HttpRouteAttributeResult result =
                 reader.readFile(
-                        fixturePath("Http/Controller/TestNoRouteHandlerHttpControllerClass.java"));
+                        fixturePath(
+                                "Http/Controller/TestNoRouteHandlerHttpControllerFixture.java"));
 
         assertEquals(1, result.routeData().size());
         HttpRouteData route = result.routeData().get("no.handler");
@@ -109,7 +111,7 @@ public final class HttpRouteAttributeReaderTest {
         HttpRouteAttributeResult result =
                 reader.readFile(
                         fixturePath(
-                                "Http/Controller/TestSingleRequestMethodHttpControllerClass.java"));
+                                "Http/Controller/TestSingleRequestMethodHttpControllerFixture.java"));
 
         assertEquals(1, result.routeData().size());
         HttpRouteData route = result.routeData().get("single.get");
@@ -119,7 +121,7 @@ public final class HttpRouteAttributeReaderTest {
 
     @Test
     void readFile_withNoTypeDeclaration_throwsException() {
-        String path = fixturePath("Http/Controller/TestNoTypeDeclHttpControllerClass.java");
+        String path = fixturePath("Http/Controller/TestNoTypeDeclHttpControllerFixture.java");
 
         assertThrows(RuntimeException.class, () -> reader.readFile(path));
     }
@@ -129,7 +131,7 @@ public final class HttpRouteAttributeReaderTest {
         HttpRouteAttributeResult result =
                 reader.readFile(
                         fixturePath(
-                                "Http/Controller/TestStringRequestMethodHttpControllerClass.java"));
+                                "Http/Controller/TestStringRequestMethodHttpControllerFixture.java"));
 
         assertEquals(1, result.routeData().size());
         HttpRouteData route = result.routeData().get("str.get");
@@ -140,7 +142,7 @@ public final class HttpRouteAttributeReaderTest {
     @Test
     void readFile_edgeAnnotations_handlesMarkerHandlerAndDefaults() {
         HttpRouteAttributeResult result =
-                reader.readFile(fixturePath("Http/Controller/TestEdgeHttpControllerClass.java"));
+                reader.readFile(fixturePath("Http/Controller/TestEdgeHttpControllerFixture.java"));
 
         assertTrue(result.routes().containsKey("edge"));
     }
@@ -165,7 +167,7 @@ public final class HttpRouteAttributeReaderTest {
 
         var result =
                 mwReader.readFile(
-                        fixturePath("Http/Controller/TestMiddlewareHttpControllerClass.java"));
+                        fixturePath("Http/Controller/TestMiddlewareHttpControllerFixture.java"));
         HttpRouteData data = result.routeData().get("guarded");
         String supplier = result.routes().get("guarded").toString();
 
@@ -188,14 +190,16 @@ public final class HttpRouteAttributeReaderTest {
     void readFile_withoutAResolverClassifiesNoHttpMiddleware() {
         HttpRouteAttributeResult result =
                 reader.readFile(
-                        fixturePath("Http/Controller/TestMiddlewareHttpControllerClass.java"));
+                        fixturePath("Http/Controller/TestMiddlewareHttpControllerFixture.java"));
 
         assertTrue(result.routeData().get("guarded").routeMatchedMiddleware().isEmpty());
     }
 
     @Test
     void readFile_parsesDynamicRouteAnnotations() {
-        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestDynamicRouteHttpControllerClass.java"));
+        HttpRouteAttributeResult result =
+                reader.readFile(
+                        fixturePath("Http/Controller/TestDynamicRouteHttpControllerFixture.java"));
 
         assertEquals(4, result.routeData().size());
 
@@ -210,7 +214,9 @@ public final class HttpRouteAttributeReaderTest {
 
     @Test
     void readFile_parsesEveryInlineParameterOfADynamicRoute() {
-        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestDynamicRouteHttpControllerClass.java"));
+        HttpRouteAttributeResult result =
+                reader.readFile(
+                        fixturePath("Http/Controller/TestDynamicRouteHttpControllerFixture.java"));
 
         HttpRouteData slug = result.routeData().get("users.slug");
         assertNotNull(slug);
@@ -221,7 +227,9 @@ public final class HttpRouteAttributeReaderTest {
 
     @Test
     void readFile_carriesTheCaptureAndOptionalFlagsIntoTheComputedRegex() {
-        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestDynamicRouteHttpControllerClass.java"));
+        HttpRouteAttributeResult result =
+                reader.readFile(
+                        fixturePath("Http/Controller/TestDynamicRouteHttpControllerFixture.java"));
 
         // A parameter declared as not captured must produce a group without a name.
         HttpRouteData nonCapture = result.routeData().get("users.nonCapture");

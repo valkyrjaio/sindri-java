@@ -33,13 +33,13 @@ public final class GrpcRouteAttributeReaderTest {
 
     @Test
     void readFile_parsesRouteCount() {
-        GrpcRouteAttributeResult result = read("TestGrpcControllerClass.java");
+        GrpcRouteAttributeResult result = read("TestGrpcControllerFixture.java");
         assertEquals(2, result.routes().size());
     }
 
     @Test
     void readFile_keysRoutesByFullyQualifiedMethod() {
-        GrpcRouteAttributeResult result = read("TestGrpcControllerClass.java");
+        GrpcRouteAttributeResult result = read("TestGrpcControllerFixture.java");
         assertTrue(result.routes().containsKey("/pkg.Greeter/SayHello"));
         assertTrue(result.routes().containsKey("/pkg.Greeter/StreamHellos"));
     }
@@ -47,7 +47,7 @@ public final class GrpcRouteAttributeReaderTest {
     @Test
     void readFile_buildsRouteSupplierWithReflectiveHandler() {
         String supplier =
-                read("TestGrpcControllerClass.java")
+                read("TestGrpcControllerFixture.java")
                         .routes()
                         .get("/pkg.Greeter/SayHello")
                         .toString();
@@ -56,13 +56,13 @@ public final class GrpcRouteAttributeReaderTest {
                         "() -> new io.valkyrja.grpc.routing.data.Route(\"/pkg.Greeter/SayHello\","));
         assertTrue(
                 supplier.contains(
-                        "(c, r) -> new io.sindri.tests.fixtures.grpc.controller.TestGrpcControllerClass().sayHello(c, r)"));
+                        "(c, r) -> new io.sindri.tests.fixtures.grpc.controller.TestGrpcControllerFixture().sayHello(c, r)"));
     }
 
     @Test
     void readFile_unaryRouteHasNoStreamingFlags() {
         String supplier =
-                read("TestGrpcControllerClass.java")
+                read("TestGrpcControllerFixture.java")
                         .routes()
                         .get("/pkg.Greeter/SayHello")
                         .toString();
@@ -73,7 +73,7 @@ public final class GrpcRouteAttributeReaderTest {
     @Test
     void readFile_streamingRouteCarriesBothFlags() {
         String supplier =
-                read("TestGrpcControllerClass.java")
+                read("TestGrpcControllerFixture.java")
                         .routes()
                         .get("/pkg.Greeter/StreamHellos")
                         .toString();
@@ -84,7 +84,7 @@ public final class GrpcRouteAttributeReaderTest {
     @Test
     void readFile_populatesRouteData() {
         GrpcRouteData data =
-                read("TestGrpcControllerClass.java").routeData().get("/pkg.Greeter/StreamHellos");
+                read("TestGrpcControllerFixture.java").routeData().get("/pkg.Greeter/StreamHellos");
         assertEquals("/pkg.Greeter/StreamHellos", data.method());
         assertEquals("pkg.Greeter", data.service());
         assertEquals("StreamHellos", data.methodName());
@@ -95,14 +95,14 @@ public final class GrpcRouteAttributeReaderTest {
 
     @Test
     void readFile_withMarkerGrpcService_returnsEmpty() {
-        GrpcRouteAttributeResult result = read("TestNoServiceGrpcControllerClass.java");
+        GrpcRouteAttributeResult result = read("TestNoServiceGrpcControllerFixture.java");
         assertTrue(result.routes().isEmpty());
         assertTrue(result.routeData().isEmpty());
     }
 
     @Test
     void readFile_skipsMarkerAndUnnamedMethods() {
-        GrpcRouteAttributeResult result = read("TestGrpcEdgeControllerClass.java");
+        GrpcRouteAttributeResult result = read("TestGrpcEdgeControllerFixture.java");
         assertEquals(1, result.routes().size());
         assertTrue(result.routes().containsKey("/pkg.Edge/Valid"));
     }
@@ -114,7 +114,7 @@ public final class GrpcRouteAttributeReaderTest {
         RuntimeException thrown =
                 assertThrows(
                         RuntimeException.class,
-                        () -> read("TestNonLiteralGrpcControllerClass.java"));
+                        () -> read("TestNonLiteralGrpcControllerFixture.java"));
         assertTrue(thrown.getMessage().contains("@Service(service)"));
         assertTrue(thrown.getMessage().contains("string literal"));
     }
@@ -143,7 +143,7 @@ public final class GrpcRouteAttributeReaderTest {
 
         var result =
                 reader.readFile(
-                        fixturePath("Grpc/Controller/TestMiddlewareGrpcControllerClass.java"));
+                        fixturePath("Grpc/Controller/TestMiddlewareGrpcControllerFixture.java"));
         String supplier = result.routes().get("/pkg.Guarded/Guarded").toString();
         GrpcRouteData data = result.routeData().get("/pkg.Guarded/Guarded");
 
@@ -183,7 +183,7 @@ public final class GrpcRouteAttributeReaderTest {
         GrpcRouteData data =
                 mwReader.readFile(
                                 fixturePath(
-                                        "Grpc/Controller/TestMiddlewaresContainerGrpcControllerClass.java"))
+                                        "Grpc/Controller/TestMiddlewaresContainerGrpcControllerFixture.java"))
                         .routeData()
                         .get("/pkg.Wrapped/Wrapped");
 
@@ -217,7 +217,7 @@ public final class GrpcRouteAttributeReaderTest {
                         "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware"),
                 mwReader.readFile(
                                 fixturePath(
-                                        "Grpc/Controller/TestQualifiedMiddlewareGrpcControllerClass.java"))
+                                        "Grpc/Controller/TestQualifiedMiddlewareGrpcControllerFixture.java"))
                         .routeData()
                         .get("/pkg.Qualified/Qualified")
                         .routeMatchedMiddleware());
@@ -228,7 +228,7 @@ public final class GrpcRouteAttributeReaderTest {
         RuntimeException thrown =
                 assertThrows(
                         RuntimeException.class,
-                        () -> read("TestNonLiteralMethodGrpcControllerClass.java"));
+                        () -> read("TestNonLiteralMethodGrpcControllerFixture.java"));
         assertTrue(thrown.getMessage().contains("@Method(name)"));
     }
 
@@ -237,7 +237,7 @@ public final class GrpcRouteAttributeReaderTest {
         // The default reader cannot resolve middleware sources, so it emits none rather than
         // guessing a stage.
         String supplier =
-                read("TestMiddlewareGrpcControllerClass.java")
+                read("TestMiddlewareGrpcControllerFixture.java")
                         .routes()
                         .get("/pkg.Guarded/Guarded")
                         .toString();
@@ -249,17 +249,19 @@ public final class GrpcRouteAttributeReaderTest {
     void readFile_withNoTypeInFile_throws() {
         assertThrows(
                 RuntimeException.class,
-                () -> reader.readFile(fixturePath("Grpc/Controller/TestNoTypeGrpcFile.java")));
+                () ->
+                        reader.readFile(
+                                fixturePath("Grpc/Controller/TestNoTypeGrpcFileFixture.java")));
     }
 
     @Test
     void readFile_noPackageController_omitsPackagePrefix() {
         String supplier =
-                read("TestNoPackageGrpcControllerClass.java")
+                read("TestNoPackageGrpcControllerFixture.java")
                         .routes()
                         .get("/pkg.NoPkg/Ping")
                         .toString();
         assertTrue(
-                supplier.contains("(c, r) -> new TestNoPackageGrpcControllerClass().ping(c, r)"));
+                supplier.contains("(c, r) -> new TestNoPackageGrpcControllerFixture().ping(c, r)"));
     }
 }

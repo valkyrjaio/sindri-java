@@ -39,7 +39,8 @@ public final class AstReaderTest {
 
     @Test
     void readFile_withRecordType_returnsEmpty() {
-        ServiceProviderResult result = reader.readFile(fixturePath("Data/TestDataRecord.java"));
+        ServiceProviderResult result =
+                reader.readFile(fixturePath("Data/TestDataRecordFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
     }
@@ -66,7 +67,7 @@ public final class AstReaderTest {
     void findThisCallArgs_withThisCall_returnsArgs() {
         TestableAstReader astReader = new TestableAstReader();
         CompilationUnit cu =
-                astReader.testParseFile(fixturePath("Common/TestClassWithThisCall.java"));
+                astReader.testParseFile(fixturePath("Common/TestClassWithThisCallFixture.java"));
         ClassOrInterfaceDeclaration clazz = astReader.testFindClass(cu).orElseThrow();
         ConstructorDeclaration ctor =
                 clazz.getConstructors().stream()

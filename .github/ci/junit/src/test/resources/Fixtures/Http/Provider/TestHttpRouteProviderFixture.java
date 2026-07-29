@@ -1,0 +1,20 @@
+package io.sindri.tests.fixtures.http.provider;
+
+import io.sindri.tests.fixtures.http.controller.TestHttpControllerFixture;
+
+import java.util.List;
+
+public final class TestHttpRouteProviderFixture {
+
+    public List<Class<?>> getControllerClasses() {
+        return List.of(TestHttpControllerFixture.class);
+    }
+
+    public List<Object> getRoutes() {
+        return List.of();
+    }
+
+    public static void getHandler(Object container, Object route) {}
+
+    public static void postHandler(Object container, Object route) {}
+}

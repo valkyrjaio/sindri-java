@@ -27,7 +27,7 @@ public final class CliRouteAttributeReaderTest {
     @Test
     void readFile_parsesRouteCount() {
         CliRouteAttributeResult result =
-                reader.readFile(fixturePath("Cli/Controller/TestCliControllerClass.java"));
+                reader.readFile(fixturePath("Cli/Controller/TestCliControllerFixture.java"));
 
         assertEquals(1, result.routes().size());
     }
@@ -35,7 +35,7 @@ public final class CliRouteAttributeReaderTest {
     @Test
     void readFile_parsesRouteName() {
         CliRouteAttributeResult result =
-                reader.readFile(fixturePath("Cli/Controller/TestCliControllerClass.java"));
+                reader.readFile(fixturePath("Cli/Controller/TestCliControllerFixture.java"));
 
         assertTrue(result.routes().containsKey("greet"));
     }
@@ -43,7 +43,7 @@ public final class CliRouteAttributeReaderTest {
     @Test
     void readFile_withNoRouteMethod_returnsEmpty() {
         CliRouteAttributeResult result =
-                reader.readFile(fixturePath("Cli/Controller/TestNoRouteCliControllerClass.java"));
+                reader.readFile(fixturePath("Cli/Controller/TestNoRouteCliControllerFixture.java"));
 
         assertTrue(result.routes().isEmpty());
     }
@@ -51,7 +51,7 @@ public final class CliRouteAttributeReaderTest {
     @Test
     void readFile_markerRoute_isSkipped() {
         CliRouteAttributeResult result =
-                reader.readFile(fixturePath("Cli/Controller/TestEdgeCliControllerClass.java"));
+                reader.readFile(fixturePath("Cli/Controller/TestEdgeCliControllerFixture.java"));
 
         assertTrue(result.routes().isEmpty());
     }
@@ -59,20 +59,20 @@ public final class CliRouteAttributeReaderTest {
     @Test
     void readFile_buildsRouteSupplierWithHandler() {
         CliRouteAttributeResult result =
-                reader.readFile(fixturePath("Cli/Controller/TestCliControllerClass.java"));
+                reader.readFile(fixturePath("Cli/Controller/TestCliControllerFixture.java"));
 
         String supplier = result.routes().get("greet").toString();
         assertTrue(supplier.contains("() -> new io.valkyrja.cli.routing.data.Route(\"greet\","));
         assertTrue(
                 supplier.contains(
-                        "io.sindri.tests.fixtures.cli.provider.TestCliRouteProviderClass::greetHandler"));
+                        "io.sindri.tests.fixtures.cli.provider.TestCliRouteProviderFixture::greetHandler"));
     }
 
     @Test
     void readFile_edgeRoutes_handlerlessAndUnknownMembers() {
         CliRouteAttributeResult result =
                 reader.readFile(
-                        fixturePath("Cli/Controller/TestCliEdgeRoutesControllerClass.java"));
+                        fixturePath("Cli/Controller/TestCliEdgeRoutesControllerFixture.java"));
 
         assertEquals(3, result.routes().size());
         // No @RouteHandler → the supplier uses a null handler.
@@ -103,7 +103,8 @@ public final class CliRouteAttributeReaderTest {
 
         String supplier =
                 mwReader.readFile(
-                                fixturePath("Cli/Controller/TestMiddlewareCliControllerClass.java"))
+                                fixturePath(
+                                        "Cli/Controller/TestMiddlewareCliControllerFixture.java"))
                         .routes()
                         .get("guarded")
                         .toString();
@@ -120,7 +121,9 @@ public final class CliRouteAttributeReaderTest {
     @Test
     void readFile_withoutAResolverEmitsTheShortConstructor() {
         String supplier =
-                reader.readFile(fixturePath("Cli/Controller/TestMiddlewareCliControllerClass.java"))
+                reader.readFile(
+                                fixturePath(
+                                        "Cli/Controller/TestMiddlewareCliControllerFixture.java"))
                         .routes()
                         .get("guarded")
                         .toString();
@@ -134,6 +137,7 @@ public final class CliRouteAttributeReaderTest {
                 RuntimeException.class,
                 () ->
                         reader.readFile(
-                                fixturePath("Cli/Controller/TestNoTypeCliControllerFile.java")));
+                                fixturePath(
+                                        "Cli/Controller/TestNoTypeCliControllerFileFixture.java")));
     }
 }

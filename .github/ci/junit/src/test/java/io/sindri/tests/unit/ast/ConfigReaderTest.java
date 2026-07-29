@@ -27,13 +27,13 @@ final class ConfigReaderTest {
     @Test
     void readsClassConfigWithProviders() {
         ConfigResult result =
-                new ConfigReader().readFile(fixturePath("Config/TestConfigClass.java"));
+                new ConfigReader().readFile(fixturePath("Config/TestConfigFixture.java"));
 
         assertEquals("io.sindri.tests", result.namespace());
         assertEquals("io.sindri.tests.data", result.dataNamespace());
         assertEquals(
                 java.util.List.of(
-                        "io.sindri.tests.fixtures.component.provider.TestComponentProviderClass"),
+                        "io.sindri.tests.fixtures.component.provider.TestComponentProviderFixture"),
                 result.providers());
         assertTrue(result.dataPath().endsWith("/data"));
     }
@@ -41,7 +41,7 @@ final class ConfigReaderTest {
     @Test
     void readsRecordConfigWithNonPrefixedDataNamespace() {
         ConfigResult result =
-                new ConfigReader().readFile(fixturePath("Config/TestConfigRecord.java"));
+                new ConfigReader().readFile(fixturePath("Config/TestConfigRecordFixture.java"));
 
         assertEquals("io.sindri.tests", result.namespace());
         assertEquals("other.data", result.dataNamespace());
@@ -52,7 +52,8 @@ final class ConfigReaderTest {
     @Test
     void ignoresProviderListWithoutObjectCreations() {
         ConfigResult result =
-                new ConfigReader().readFile(fixturePath("Config/TestConfigStringProviders.java"));
+                new ConfigReader()
+                        .readFile(fixturePath("Config/TestConfigStringProvidersFixture.java"));
 
         assertTrue(result.providers().isEmpty());
     }
@@ -61,21 +62,27 @@ final class ConfigReaderTest {
     void throwsWhenNoTypeIsPresent() {
         assertThrows(
                 RuntimeException.class,
-                () -> new ConfigReader().readFile(fixturePath("Config/TestConfigNoType.java")));
+                () ->
+                        new ConfigReader()
+                                .readFile(fixturePath("Config/TestConfigNoTypeFixture.java")));
     }
 
     @Test
     void throwsWhenNoNoArgConstructor() {
         assertThrows(
                 RuntimeException.class,
-                () -> new ConfigReader().readFile(fixturePath("Config/TestConfigNoCtor.java")));
+                () ->
+                        new ConfigReader()
+                                .readFile(fixturePath("Config/TestConfigNoCtorFixture.java")));
     }
 
     @Test
     void throwsWhenConstructorHasNoThisCall() {
         assertThrows(
                 RuntimeException.class,
-                () -> new ConfigReader().readFile(fixturePath("Config/TestConfigNoThisCall.java")));
+                () ->
+                        new ConfigReader()
+                                .readFile(fixturePath("Config/TestConfigNoThisCallFixture.java")));
     }
 
     @Test
@@ -95,7 +102,8 @@ final class ConfigReaderTest {
 
         // Only the object-creation item is collected; the NameExpr is skipped.
         assertEquals(
-                1, reader.readFile(fixturePath("Config/TestConfigClass.java")).providers().size());
+                1,
+                reader.readFile(fixturePath("Config/TestConfigFixture.java")).providers().size());
     }
 
     @Test
@@ -103,7 +111,8 @@ final class ConfigReaderTest {
         // No package declaration (empty file package) and an empty namespace literal exercise the
         // filePkg-empty / namespace-empty ternaries plus resolveClassName's empty-package arm.
         ConfigResult result =
-                new ConfigReader().readFile(fixturePath("Config/TestConfigDefaultPackage.java"));
+                new ConfigReader()
+                        .readFile(fixturePath("Config/TestConfigDefaultPackageFixture.java"));
 
         assertEquals("", result.namespace());
         assertEquals(java.util.List.of("SomeProvider"), result.providers());
@@ -123,6 +132,8 @@ final class ConfigReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Config/TestConfigClass.java")).providers().isEmpty());
+                reader.readFile(fixturePath("Config/TestConfigFixture.java"))
+                        .providers()
+                        .isEmpty());
     }
 }

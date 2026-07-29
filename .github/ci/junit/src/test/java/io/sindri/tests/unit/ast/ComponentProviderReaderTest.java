@@ -27,51 +27,56 @@ public final class ComponentProviderReaderTest {
     @Test
     void readFile_parsesServiceProviders() {
         ComponentProviderResult data =
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Component/Provider/TestComponentProviderFixture.java"));
 
         assertEquals(1, data.serviceProviders().size());
         assertEquals(
-                "io.sindri.tests.fixtures.container.provider.TestServiceProviderClass",
+                "io.sindri.tests.fixtures.container.provider.TestServiceProviderFixture",
                 data.serviceProviders().get(0));
     }
 
     @Test
     void readFile_parsesListenerProviders() {
         ComponentProviderResult data =
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Component/Provider/TestComponentProviderFixture.java"));
 
         assertEquals(1, data.listenerProviders().size());
         assertEquals(
-                "io.sindri.tests.fixtures.event.provider.TestListenerProviderClass",
+                "io.sindri.tests.fixtures.event.provider.TestListenerProviderFixture",
                 data.listenerProviders().get(0));
     }
 
     @Test
     void readFile_parsesHttpRouteProviders() {
         ComponentProviderResult data =
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Component/Provider/TestComponentProviderFixture.java"));
 
         assertEquals(1, data.httpRouteProviders().size());
         assertEquals(
-                "io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderClass",
+                "io.sindri.tests.fixtures.http.provider.TestHttpRouteProviderFixture",
                 data.httpRouteProviders().get(0));
     }
 
     @Test
     void readFile_parsesGrpcRouteProviders() {
         ComponentProviderResult data =
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Component/Provider/TestComponentProviderFixture.java"));
 
         assertEquals(1, data.grpcRouteProviders().size());
         assertEquals(
-                "io.sindri.tests.fixtures.grpc.provider.TestGrpcRouteProviderClass",
+                "io.sindri.tests.fixtures.grpc.provider.TestGrpcRouteProviderFixture",
                 data.grpcRouteProviders().get(0));
     }
 
     @Test
     void readFile_emptyComponentAndCliRouteProviders() {
         ComponentProviderResult data =
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Component/Provider/TestComponentProviderFixture.java"));
 
         assertTrue(data.componentProviders().isEmpty());
         assertTrue(data.cliRouteProviders().isEmpty());
@@ -81,7 +86,7 @@ public final class ComponentProviderReaderTest {
     void readFile_missingMethods_returnsEmptyForMissingOnes() {
         ComponentProviderResult data =
                 reader.readFile(
-                        fixturePath("Component/Provider/TestMinimalComponentProviderClass.java"));
+                        fixturePath("Component/Provider/TestMinimalComponentProviderFixture.java"));
 
         assertTrue(data.componentProviders().isEmpty());
         assertTrue(data.listenerProviders().isEmpty());
@@ -94,7 +99,8 @@ public final class ComponentProviderReaderTest {
     void readFile_methodWithNoReturn_returnsEmpty() {
         ComponentProviderResult data =
                 reader.readFile(
-                        fixturePath("Component/Provider/TestNoReturnComponentProviderClass.java"));
+                        fixturePath(
+                                "Component/Provider/TestNoReturnComponentProviderFixture.java"));
 
         assertTrue(data.serviceProviders().isEmpty());
     }
@@ -113,7 +119,7 @@ public final class ComponentProviderReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"))
+                reader.readFile(fixturePath("Component/Provider/TestComponentProviderFixture.java"))
                         .serviceProviders()
                         .isEmpty());
     }
@@ -130,7 +136,7 @@ public final class ComponentProviderReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Component/Provider/TestComponentProviderClass.java"))
+                reader.readFile(fixturePath("Component/Provider/TestComponentProviderFixture.java"))
                         .serviceProviders()
                         .isEmpty());
     }
@@ -142,6 +148,6 @@ public final class ComponentProviderReaderTest {
                 () ->
                         reader.readFile(
                                 fixturePath(
-                                        "Component/Provider/TestNoTypeComponentProviderFile.java")));
+                                        "Component/Provider/TestNoTypeComponentProviderFileFixture.java")));
     }
 }

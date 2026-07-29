@@ -27,18 +27,18 @@ public final class RouteProviderReaderTest {
     @Test
     void readFile_parsesControllerClasses() {
         RouteProviderResult result =
-                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderClass.java"));
+                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderFixture.java"));
 
         assertEquals(1, result.controllerClasses().size());
         assertEquals(
-                "io.sindri.tests.fixtures.http.controller.TestHttpControllerClass",
+                "io.sindri.tests.fixtures.http.controller.TestHttpControllerFixture",
                 result.controllerClasses().get(0));
     }
 
     @Test
     void readFile_noGetControllerClassesMethod_returnsEmpty() {
         RouteProviderResult result =
-                reader.readFile(fixturePath("Http/Provider/TestEmptyRouteProviderClass.java"));
+                reader.readFile(fixturePath("Http/Provider/TestEmptyRouteProviderFixture.java"));
 
         assertTrue(result.controllerClasses().isEmpty());
         assertTrue(result.routes().isEmpty());
@@ -47,7 +47,7 @@ public final class RouteProviderReaderTest {
     @Test
     void readFile_getControllerClassesThrows_returnsEmpty() {
         RouteProviderResult result =
-                reader.readFile(fixturePath("Http/Provider/TestNoReturnRouteProviderClass.java"));
+                reader.readFile(fixturePath("Http/Provider/TestNoReturnRouteProviderFixture.java"));
 
         assertTrue(result.controllerClasses().isEmpty());
         assertTrue(result.routes().isEmpty());
@@ -67,7 +67,7 @@ public final class RouteProviderReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderClass.java"))
+                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderFixture.java"))
                         .controllerClasses()
                         .isEmpty());
     }
@@ -75,14 +75,14 @@ public final class RouteProviderReaderTest {
     @Test
     void readFile_readsAndQualifiesProviderRoutes() {
         RouteProviderResult result =
-                reader.readFile(fixturePath("Http/Provider/TestRoutesRouteProviderClass.java"));
+                reader.readFile(fixturePath("Http/Provider/TestRoutesRouteProviderFixture.java"));
 
         assertEquals(4, result.routes().size());
         String first = result.routes().get(0).toString();
         assertTrue(first.contains("new io.valkyrja.http.routing.data.Route("));
         assertTrue(
                 first.contains(
-                        "io.sindri.tests.fixtures.http.provider.TestRoutesRouteProviderClass::h"));
+                        "io.sindri.tests.fixtures.http.provider.TestRoutesRouteProviderFixture::h"));
         assertTrue(first.contains("io.valkyrja.http.message.enum_.RequestMethod.GET"));
         assertTrue(result.routes().get(2).toString().contains("Unmapped.VALUE"));
         assertTrue(result.routes().get(3).toString().contains("new UnmappedRoute("));
@@ -92,7 +92,7 @@ public final class RouteProviderReaderTest {
     void readFile_providerWithoutGetRoutes_hasNoRoutes() {
         RouteProviderResult result =
                 reader.readFile(
-                        fixturePath("Http/Provider/TestControllersOnlyRouteProviderClass.java"));
+                        fixturePath("Http/Provider/TestControllersOnlyRouteProviderFixture.java"));
 
         assertTrue(result.routes().isEmpty());
     }
@@ -100,11 +100,12 @@ public final class RouteProviderReaderTest {
     @Test
     void readFile_noPackageProvider_qualifiesSelfClassWithoutPackage() {
         RouteProviderResult result =
-                reader.readFile(fixturePath("Http/Provider/TestNoPackageRouteProviderClass.java"));
+                reader.readFile(
+                        fixturePath("Http/Provider/TestNoPackageRouteProviderFixture.java"));
 
         assertEquals(1, result.routes().size());
         assertTrue(
-                result.routes().get(0).toString().contains("TestNoPackageRouteProviderClass::h"));
+                result.routes().get(0).toString().contains("TestNoPackageRouteProviderFixture::h"));
     }
 
     @Test
@@ -119,7 +120,7 @@ public final class RouteProviderReaderTest {
                 };
 
         assertTrue(
-                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderClass.java"))
+                reader.readFile(fixturePath("Http/Provider/TestHttpRouteProviderFixture.java"))
                         .controllerClasses()
                         .isEmpty());
     }
@@ -130,6 +131,7 @@ public final class RouteProviderReaderTest {
                 RuntimeException.class,
                 () ->
                         reader.readFile(
-                                fixturePath("Http/Provider/TestNoTypeRouteProviderFile.java")));
+                                fixturePath(
+                                        "Http/Provider/TestNoTypeRouteProviderFileFixture.java")));
     }
 }

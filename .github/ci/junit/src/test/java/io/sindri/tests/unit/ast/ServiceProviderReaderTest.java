@@ -28,7 +28,7 @@ public final class ServiceProviderReaderTest {
     @Test
     void readFile_parsesPublishers() {
         ServiceProviderResult result =
-                reader.readFile(fixturePath("Container/Provider/TestServiceProviderClass.java"));
+                reader.readFile(fixturePath("Container/Provider/TestServiceProviderFixture.java"));
 
         assertEquals(1, result.publishers().size());
         assertTrue(
@@ -38,12 +38,12 @@ public final class ServiceProviderReaderTest {
     @Test
     void readFile_parsesProviderAndMethod() {
         ServiceProviderResult result =
-                reader.readFile(fixturePath("Container/Provider/TestServiceProviderClass.java"));
+                reader.readFile(fixturePath("Container/Provider/TestServiceProviderFixture.java"));
 
         String[] ref = result.publishers().get("io.sindri.tests.fixtures.container.TestService");
         assertArrayEquals(
                 new String[] {
-                    "io.sindri.tests.fixtures.container.provider.TestServiceProviderClass",
+                    "io.sindri.tests.fixtures.container.provider.TestServiceProviderFixture",
                     "publishTestService"
                 },
                 ref);
@@ -53,7 +53,7 @@ public final class ServiceProviderReaderTest {
     void readFile_noPublishersMethod_returnsEmpty() {
         ServiceProviderResult result =
                 reader.readFile(
-                        fixturePath("Container/Provider/TestEmptyServiceProviderClass.java"));
+                        fixturePath("Container/Provider/TestEmptyServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
         assertTrue(result.serviceClasses().isEmpty());
@@ -63,7 +63,7 @@ public final class ServiceProviderReaderTest {
     void readFile_publishersThrows_returnsEmpty() {
         ServiceProviderResult result =
                 reader.readFile(
-                        fixturePath("Container/Provider/TestNoReturnServiceProviderClass.java"));
+                        fixturePath("Container/Provider/TestNoReturnServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
         assertTrue(result.serviceClasses().isEmpty());
@@ -74,7 +74,7 @@ public final class ServiceProviderReaderTest {
         ServiceProviderResult result =
                 reader.readFile(
                         fixturePath(
-                                "Container/Provider/TestFieldPublishersServiceProviderClass.java"));
+                                "Container/Provider/TestFieldPublishersServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
         assertTrue(result.serviceClasses().isEmpty());
@@ -85,7 +85,7 @@ public final class ServiceProviderReaderTest {
         ServiceProviderResult result =
                 reader.readFile(
                         fixturePath(
-                                "Container/Provider/TestMixedPublishersServiceProviderClass.java"));
+                                "Container/Provider/TestMixedPublishersServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
     }
@@ -94,7 +94,7 @@ public final class ServiceProviderReaderTest {
     void readFile_mapOfEntriesPublishers_parsesEntries() {
         ServiceProviderResult result =
                 reader.readFile(
-                        fixturePath("Container/Provider/TestOfEntriesServiceProviderClass.java"));
+                        fixturePath("Container/Provider/TestOfEntriesServiceProviderFixture.java"));
 
         assertEquals(1, result.publishers().size());
         assertTrue(
@@ -102,7 +102,7 @@ public final class ServiceProviderReaderTest {
         String[] ref = result.publishers().get("io.sindri.tests.fixtures.container.TestService");
         assertArrayEquals(
                 new String[] {
-                    "io.sindri.tests.fixtures.container.provider.TestOfEntriesServiceProviderClass",
+                    "io.sindri.tests.fixtures.container.provider.TestOfEntriesServiceProviderFixture",
                     "publish"
                 },
                 ref);
@@ -113,7 +113,7 @@ public final class ServiceProviderReaderTest {
         ServiceProviderResult result =
                 reader.readFile(
                         fixturePath(
-                                "Container/Provider/TestBadOfEntriesServiceProviderClass.java"));
+                                "Container/Provider/TestBadOfEntriesServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
     }
@@ -122,7 +122,7 @@ public final class ServiceProviderReaderTest {
     void readFile_mapOfEntries_isParsed() {
         ServiceProviderResult result =
                 reader.readFile(
-                        fixturePath("Container/Provider/TestOfEntriesServiceProviderClass.java"));
+                        fixturePath("Container/Provider/TestOfEntriesServiceProviderFixture.java"));
 
         assertEquals(1, result.publishers().size());
     }
@@ -131,7 +131,7 @@ public final class ServiceProviderReaderTest {
     void readFile_neitherMapOfNorOfEntries_returnsEmpty() {
         ServiceProviderResult result =
                 reader.readFile(
-                        fixturePath("Container/Provider/TestCopyOfServiceProviderClass.java"));
+                        fixturePath("Container/Provider/TestCopyOfServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
     }
@@ -140,7 +140,7 @@ public final class ServiceProviderReaderTest {
     void readFile_mapCallOtherThanOfOrOfEntries_returnsEmpty() {
         ServiceProviderResult result =
                 reader.readFile(
-                        fixturePath("Container/Provider/TestMapOtherServiceProviderClass.java"));
+                        fixturePath("Container/Provider/TestMapOtherServiceProviderFixture.java"));
 
         assertTrue(result.publishers().isEmpty());
     }
@@ -152,6 +152,6 @@ public final class ServiceProviderReaderTest {
                 () ->
                         reader.readFile(
                                 fixturePath(
-                                        "Container/Provider/TestNoTypeServiceProviderFile.java")));
+                                        "Container/Provider/TestNoTypeServiceProviderFileFixture.java")));
     }
 }

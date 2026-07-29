@@ -1,0 +1,17 @@
+package io.sindri.tests.fixtures.container.provider;
+
+import io.valkyrja.container.manager.contract.ContainerContract;
+import io.valkyrja.container.provider.contract.ServiceProviderContract;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.function.Consumer;
+
+public final class TestCopyOfServiceProviderFixture implements ServiceProviderContract {
+
+    @Override
+    public Map<Class<?>, Consumer<ContainerContract>> publishers() {
+        // A non-Map-scoped call exercises the `scope.equals("Map")` false arm.
+        return Collections.emptyMap();
+    }
+}
