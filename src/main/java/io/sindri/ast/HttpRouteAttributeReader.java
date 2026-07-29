@@ -98,7 +98,10 @@ public class HttpRouteAttributeReader extends AstReader
         for (MethodDeclaration method : type.getMethods()) {
             List<AnnotationExpr> routeAnnotations =
                     method.getAnnotations().stream()
-                            .filter(a -> a.getNameAsString().equals("Route"))
+                            .filter(
+                                    a ->
+                                            a.getNameAsString().equals("Route")
+                                                    || a.getNameAsString().equals("DynamicRoute"))
                             .toList();
 
             if (routeAnnotations.isEmpty()) {
@@ -245,7 +248,9 @@ public class HttpRouteAttributeReader extends AstReader
     }
 
     /**
-     * Emit {@code List.of(new Parameter("name", "regex"), ...)} mirroring the framework collector.
+     * Emit {@code List.of(new Parameter("name", "regex", ...), ...)} mirroring the framework
+     * collector, carrying each parameter's optional and capture flags so the cached route binds
+     * exactly as a collected one does.
      */
     private String buildParameterList(List<HttpParameterData> parameters) {
         StringBuilder sb = new StringBuilder("java.util.List.of(");
@@ -255,7 +260,11 @@ public class HttpRouteAttributeReader extends AstReader
                     .append(parameter.name())
                     .append("\", \"")
                     .append(escapeJava(parameter.regex()))
-                    .append("\")");
+                    .append("\", null, ")
+                    .append(parameter.isOptional())
+                    .append(", ")
+                    .append(parameter.shouldCapture())
+                    .append(", null, null)");
             if (i < parameters.size() - 1) {
                 sb.append(", ");
             }
@@ -277,7 +286,13 @@ public class HttpRouteAttributeReader extends AstReader
         for (HttpParameterData parameter : parameters) {
             dataParameters.add(
                     new io.valkyrja.http.routing.data.Parameter(
-                            parameter.name(), parameter.regex()));
+                            parameter.name(),
+                            parameter.regex(),
+                            null,
+                            parameter.isOptional(),
+                            parameter.shouldCapture(),
+                            null,
+                            null));
         }
 
         try {

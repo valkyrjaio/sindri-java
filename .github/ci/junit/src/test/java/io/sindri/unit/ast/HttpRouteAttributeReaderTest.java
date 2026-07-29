@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -169,5 +170,49 @@ public class HttpRouteAttributeReaderTest {
                 reader.readFile(fixturePath("Http/Controller/TestMiddlewareHttpControllerClass.java"));
 
         assertTrue(result.routeData().get("guarded").routeMatchedMiddleware().isEmpty());
+    }
+
+    @Test
+    void readFile_parsesDynamicRouteAnnotations() {
+        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestDynamicRouteHttpControllerClass.java"));
+
+        assertEquals(4, result.routeData().size());
+
+        HttpRouteData show = result.routeData().get("users.show");
+        assertNotNull(show);
+        assertEquals("/users/{id}", show.path());
+        // A dynamic route declares its parameters inline, and they must be read from there.
+        assertEquals(1, show.parameters().size());
+        assertEquals("id", show.parameters().get(0).name());
+        assertFalse(show.regex().isEmpty());
+    }
+
+    @Test
+    void readFile_parsesEveryInlineParameterOfADynamicRoute() {
+        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestDynamicRouteHttpControllerClass.java"));
+
+        HttpRouteData slug = result.routeData().get("users.slug");
+        assertNotNull(slug);
+        assertEquals(2, slug.parameters().size());
+        assertEquals("id", slug.parameters().get(0).name());
+        assertEquals("slug", slug.parameters().get(1).name());
+    }
+
+    @Test
+    void readFile_carriesTheCaptureAndOptionalFlagsIntoTheComputedRegex() {
+        HttpRouteAttributeResult result = reader.readFile(fixturePath("Http/Controller/TestDynamicRouteHttpControllerClass.java"));
+
+        // A parameter declared as not captured must produce a group without a name.
+        HttpRouteData nonCapture = result.routeData().get("users.nonCapture");
+        assertNotNull(nonCapture);
+        assertFalse(nonCapture.parameters().get(0).shouldCapture());
+        assertTrue(nonCapture.regex().contains("(?:"));
+        assertFalse(nonCapture.regex().contains("(?<value>"));
+
+        // An optional parameter must make the preceding slash optional too.
+        HttpRouteData optional = result.routeData().get("users.optional");
+        assertNotNull(optional);
+        assertTrue(optional.parameters().get(0).isOptional());
+        assertTrue(optional.regex().contains(")?"));
     }
 }

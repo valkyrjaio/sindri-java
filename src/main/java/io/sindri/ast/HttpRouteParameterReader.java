@@ -46,6 +46,12 @@ public class HttpRouteParameterReader extends AstReader
                         addParameter(parameters, inner, importMap, pkg);
                     }
                 }
+                // A dynamic route declares its parameters inline, so read those too.
+                case "DynamicRoute" -> {
+                    for (AnnotationExpr inner : extractAnnotationArray(annotation, "parameters")) {
+                        addParameter(parameters, inner, importMap, pkg);
+                    }
+                }
                 default -> {}
             }
         }
@@ -124,12 +130,16 @@ public class HttpRouteParameterReader extends AstReader
     }
 
     private List<AnnotationExpr> extractParametersArray(AnnotationExpr annotation) {
+        return extractAnnotationArray(annotation, "value");
+    }
+
+    private List<AnnotationExpr> extractAnnotationArray(AnnotationExpr annotation, String member) {
         Expression value = null;
         if (annotation instanceof SingleMemberAnnotationExpr single) {
             value = single.getMemberValue();
         } else if (annotation instanceof NormalAnnotationExpr normal) {
             for (MemberValuePair pair : normal.getPairs()) {
-                if (pair.getNameAsString().equals("value")) {
+                if (pair.getNameAsString().equals(member)) {
                     value = pair.getValue();
                 }
             }
