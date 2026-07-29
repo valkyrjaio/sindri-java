@@ -44,7 +44,7 @@ dependencies {
     jacocoAgent("org.jacoco:org.jacoco.agent:0.8.15")
     jacocoAnt("org.jacoco:org.jacoco.ant:0.8.15")
 
-    implementation("io.valkyrja:valkyrja:26.4.0")
+    implementation("io.valkyrja:valkyrja:26.4.1")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
