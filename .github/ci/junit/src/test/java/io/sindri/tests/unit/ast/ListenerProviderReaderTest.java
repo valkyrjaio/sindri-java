@@ -16,7 +16,7 @@ import io.sindri.ast.*;
 import io.sindri.ast.data.result.ListenerProviderResult;
 import org.junit.jupiter.api.Test;
 
-public class ListenerProviderReaderTest {
+public final class ListenerProviderReaderTest {
 
     private final ListenerProviderReader reader = new ListenerProviderReader();
 

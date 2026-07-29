@@ -23,7 +23,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AstHttpDataFileGeneratorTest {
+public final class AstHttpDataFileGeneratorTest {
 
     private final AstHttpDataFileGenerator generator = new AstHttpDataFileGenerator();
 

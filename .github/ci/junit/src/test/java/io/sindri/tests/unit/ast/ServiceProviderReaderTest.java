@@ -17,7 +17,7 @@ import io.sindri.ast.*;
 import io.sindri.ast.data.result.ServiceProviderResult;
 import org.junit.jupiter.api.Test;
 
-public class ServiceProviderReaderTest {
+public final class ServiceProviderReaderTest {
 
     private final ServiceProviderReader reader = new ServiceProviderReader();
 

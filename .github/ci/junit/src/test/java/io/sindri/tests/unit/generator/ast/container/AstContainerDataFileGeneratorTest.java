@@ -22,7 +22,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AstContainerDataFileGeneratorTest {
+public final class AstContainerDataFileGeneratorTest {
 
     private final AstContainerDataFileGenerator generator = new AstContainerDataFileGenerator();
 

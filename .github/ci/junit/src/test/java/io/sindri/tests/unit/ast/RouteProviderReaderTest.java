@@ -16,7 +16,7 @@ import io.sindri.ast.*;
 import io.sindri.ast.data.result.RouteProviderResult;
 import org.junit.jupiter.api.Test;
 
-public class RouteProviderReaderTest {
+public final class RouteProviderReaderTest {
 
     private final RouteProviderReader reader = new RouteProviderReader();
 

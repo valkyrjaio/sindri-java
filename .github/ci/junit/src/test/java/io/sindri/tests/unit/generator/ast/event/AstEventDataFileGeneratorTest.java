@@ -20,7 +20,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AstEventDataFileGeneratorTest {
+public final class AstEventDataFileGeneratorTest {
 
     private final AstEventDataFileGenerator generator = new AstEventDataFileGenerator();
 

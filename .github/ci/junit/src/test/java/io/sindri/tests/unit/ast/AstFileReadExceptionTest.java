@@ -15,7 +15,7 @@ import io.sindri.ast.*;
 import io.sindri.ast.throwable.exception.AstFileReadException;
 import org.junit.jupiter.api.Test;
 
-public class AstFileReadExceptionTest {
+public final class AstFileReadExceptionTest {
 
     @Test
     void constructor_withMessage_storesMessage() {

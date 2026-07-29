@@ -16,7 +16,7 @@ import io.sindri.ast.*;
 import io.sindri.ast.data.result.CliRouteAttributeResult;
 import org.junit.jupiter.api.Test;
 
-public class CliRouteAttributeReaderTest {
+public final class CliRouteAttributeReaderTest {
 
     private final CliRouteAttributeReader reader = new CliRouteAttributeReader();
 

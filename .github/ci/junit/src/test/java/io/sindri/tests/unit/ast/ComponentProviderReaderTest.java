@@ -16,7 +16,7 @@ import io.sindri.ast.*;
 import io.sindri.ast.data.result.ComponentProviderResult;
 import org.junit.jupiter.api.Test;
 
-public class ComponentProviderReaderTest {
+public final class ComponentProviderReaderTest {
 
     private final ComponentProviderReader reader = new ComponentProviderReader();
 

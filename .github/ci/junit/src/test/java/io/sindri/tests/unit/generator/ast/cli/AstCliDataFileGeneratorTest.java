@@ -20,7 +20,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class AstCliDataFileGeneratorTest {
+public final class AstCliDataFileGeneratorTest {
 
     private final AstCliDataFileGenerator generator = new AstCliDataFileGenerator();
 

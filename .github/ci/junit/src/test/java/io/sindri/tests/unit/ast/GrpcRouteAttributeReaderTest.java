@@ -19,7 +19,7 @@ import io.sindri.ast.data.GrpcRouteData;
 import io.sindri.ast.data.result.GrpcRouteAttributeResult;
 import org.junit.jupiter.api.Test;
 
-public class GrpcRouteAttributeReaderTest {
+public final class GrpcRouteAttributeReaderTest {
 
     private final GrpcRouteAttributeReader reader = new GrpcRouteAttributeReader();
 

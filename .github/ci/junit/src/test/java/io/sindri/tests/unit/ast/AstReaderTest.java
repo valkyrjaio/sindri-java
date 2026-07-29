@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-public class AstReaderTest {
+public final class AstReaderTest {
 
     private final ServiceProviderReader reader = new ServiceProviderReader();
 

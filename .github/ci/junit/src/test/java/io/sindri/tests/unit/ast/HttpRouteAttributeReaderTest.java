@@ -22,7 +22,7 @@ import io.sindri.ast.data.result.HttpRouteAttributeResult;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class HttpRouteAttributeReaderTest {
+public final class HttpRouteAttributeReaderTest {
 
     private final HttpRouteAttributeReader reader = new HttpRouteAttributeReader();
 
@@ -62,9 +62,11 @@ public class HttpRouteAttributeReaderTest {
         long getMethodRoutes =
                 result.routeData().values().stream()
                         .filter(
-                                r ->
-                                        r.handler() != null
-                                                && r.handler().method().equals("getHandler"))
+                                r -> {
+                                    var handler = r.handler();
+
+                                    return handler != null && handler.method().equals("getHandler");
+                                })
                         .count();
         assertEquals(2, getMethodRoutes);
     }
