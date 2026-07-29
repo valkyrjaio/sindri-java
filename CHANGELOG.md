@@ -1,6 +1,16 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.2...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.3...26.x)
+
+## [v26.4.3](https://github.com/valkyrjaio/sindri-java/compare/v26.4.2...v26.4.3) - 2026-07-28
+
+* [Grpc] Add a golden snapshot for the gRPC routing data generator by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/58
+* [CI] Declare the SpotBugs and JaCoCo tool versions as dependencies by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/59
+* [Http] Read dynamic route annotations and carry their parameter flags by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/61
+* [CI] Align the test tree and bring it under Spotless, ErrorProne, SpotBugs, and ArchUnit by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/60
+* [Cli] Generate the argument and option parameters a command declares by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/62
+* [GitHub] Update .github workflow refs to v26.12.1 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/63
+* [Gradle] Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/64
 
 ## [v26.4.2](https://github.com/valkyrjaio/sindri-java/compare/v26.4.1...v26.4.2) - 2026-07-28
 
