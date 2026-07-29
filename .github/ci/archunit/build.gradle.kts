@@ -46,7 +46,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation("io.valkyrja:valkyrja:26.4.0")
+    implementation("io.valkyrja:valkyrja:26.4.1")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.0")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.2")
@@ -55,7 +55,7 @@ dependencies {
 
     // Mirrors the JUnit build's test classpath — needed only so the tests compile here. The
     // `src` dependencies are repeated because a custom source set does not inherit `main`'s.
-    "testTreeImplementation"("io.valkyrja:valkyrja:26.4.0")
+    "testTreeImplementation"("io.valkyrja:valkyrja:26.4.1")
     "testTreeImplementation"("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     "testTreeImplementation"("org.junit.jupiter:junit-jupiter:6.1.2")
     "testTreeImplementation"("org.mockito:mockito-core:5.23.0")
