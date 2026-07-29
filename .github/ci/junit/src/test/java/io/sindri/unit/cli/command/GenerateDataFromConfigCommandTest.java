@@ -511,10 +511,12 @@ final class GenerateDataFromConfigCommandTest {
                         "\"show\", () -> new io.valkyrja.http.routing.data.DynamicRoute(\"/show/{value}\","
                                 + " \"show\","),
                 () -> "dynamic route supplier missing/incorrect:\n" + http);
-        // ...with its Parameter regex resolved from the Regex.ALPHA constant ([a-zA-Z]+)...
+        // ...with its Parameter regex resolved from the Regex.ALPHA constant ([a-zA-Z]+), and the
+        // optional and capture flags it was declared with carried through...
         assertTrue(
                 http.contains(
-                        "new io.valkyrja.http.routing.data.Parameter(\"value\", \"[a-zA-Z]+\")"),
+                        "new io.valkyrja.http.routing.data.Parameter(\"value\", \"[a-zA-Z]+\", null,"
+                                + " false, true, null, null)"),
                 () -> "parameter regex not resolved from Regex constant:\n" + http);
         // ...and the full match regex precomputed by the framework Processor.
         assertTrue(
