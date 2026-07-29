@@ -140,4 +140,62 @@ public final class CliRouteAttributeReaderTest {
                                 fixturePath(
                                         "Cli/Controller/TestNoTypeCliControllerFileFixture.java")));
     }
+
+    @Test
+    void readFile_emitsTheArgumentAndOptionParametersACommandDeclares() {
+        CliRouteAttributeResult result =
+                reader.readFile(
+                        fixturePath("Cli/Controller/TestParameterCliControllerFixture.java"));
+
+        String supplier = result.routes().get("build").toString();
+
+        // Declaring parameters forces the full constructor, whose null helpText and empty
+        // middleware match the short constructor's defaults.
+        assertTrue(supplier.contains(", null, "));
+
+        assertTrue(
+                supplier.contains(
+                        "new io.valkyrja.cli.routing.data.ArgumentParameter(\"target\", \"The"
+                                + " target\", io.valkyrja.cli.routing.enum_.ArgumentMode.REQUIRED,"
+                                + " io.valkyrja.cli.routing.enum_.ArgumentValueMode.DEFAULT,"
+                                + " java.util.List.of())"));
+        assertTrue(
+                supplier.contains(
+                        "new io.valkyrja.cli.routing.data.ArgumentParameter(\"rest\", \"The"
+                                + " rest\", io.valkyrja.cli.routing.enum_.ArgumentMode.OPTIONAL,"
+                                + " io.valkyrja.cli.routing.enum_.ArgumentValueMode.ARRAY,"
+                                + " java.util.List.of())"));
+
+        // The fully populated option carries its display name, default, short names and valid
+        // values; the bare flag emits empty lists for the two it does not name.
+        assertTrue(
+                supplier.contains(
+                        "new io.valkyrja.cli.routing.data.OptionParameter(\"format\", \"The"
+                                + " format\", \"fmt\", \"json\", java.util.List.of(\"f\"),"
+                                + " java.util.List.of(\"json\", \"xml\"), java.util.List.of(),"
+                                + " io.valkyrja.cli.routing.enum_.OptionMode.REQUIRED,"
+                                + " io.valkyrja.cli.routing.enum_.OptionValueMode.DEFAULT)"));
+        assertTrue(
+                supplier.contains(
+                        "new io.valkyrja.cli.routing.data.OptionParameter(\"flag\", \"A flag\","
+                                + " \"\", \"\", java.util.List.of(), java.util.List.of(),"
+                                + " java.util.List.of(),"
+                                + " io.valkyrja.cli.routing.enum_.OptionMode.OPTIONAL,"
+                                + " io.valkyrja.cli.routing.enum_.OptionValueMode.NONE)"));
+    }
+
+    @Test
+    void readFile_emitsTheFullConstructorForACommandDeclaringOnlyAnOption() {
+        CliRouteAttributeResult result =
+                reader.readFile(
+                        fixturePath("Cli/Controller/TestParameterCliControllerFixture.java"));
+
+        String supplier = result.routes().get("flag-only").toString();
+
+        // Options alone force the full constructor, so the empty argument list is emitted too.
+        assertTrue(supplier.contains(", null, "));
+        assertTrue(
+                supplier.contains(
+                        "java.util.List.of(), java.util.List.of(new io.valkyrja.cli.routing.data.OptionParameter(\"flag\""));
+    }
 }
