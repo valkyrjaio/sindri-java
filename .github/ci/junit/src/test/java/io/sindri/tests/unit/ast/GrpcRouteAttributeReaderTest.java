@@ -101,6 +101,17 @@ public final class GrpcRouteAttributeReaderTest {
     }
 
     @Test
+    void readFile_withGrpcServiceCarryingNoServiceMember_returnsEmpty() {
+        // The marker fixture above never enters the member loop; this one walks it to exhaustion
+        // and falls out the bottom, which is the only way to reach the loop's exit branch — a real
+        // `service` member returns from inside it.
+        GrpcRouteAttributeResult result =
+                read("TestUnrelatedServiceMemberGrpcControllerFixture.java");
+        assertTrue(result.routes().isEmpty());
+        assertTrue(result.routeData().isEmpty());
+    }
+
+    @Test
     void readFile_skipsMarkerAndUnnamedMethods() {
         GrpcRouteAttributeResult result = read("TestGrpcEdgeControllerFixture.java");
         assertEquals(1, result.routes().size());
