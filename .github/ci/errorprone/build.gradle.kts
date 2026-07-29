@@ -37,6 +37,12 @@ sourceSets {
             srcDirs("../../../src/main/java")
         }
     }
+    // The JUnit build's tests are the repo's other Java source tree; analyze them too.
+    test {
+        java {
+            srcDirs("../junit/src/test/java")
+        }
+    }
 }
 
 dependencies {
@@ -45,6 +51,12 @@ dependencies {
     compileOnly("org.jspecify:jspecify:1.0.0")
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
     errorprone("com.uber.nullaway:nullaway:0.13.8")
+
+    // Mirrors the JUnit build's test classpath — needed only so the tests compile here.
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation("org.mockito:mockito-core:5.23.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    testImplementation("org.jspecify:jspecify:1.0.0")
 }
 
 fun isNonStable(version: String): Boolean {
@@ -63,5 +75,26 @@ tasks.withType<JavaCompile>().configureEach {
     options.errorprone {
         check("NullAway", CheckSeverity.ERROR)
         option("NullAway:AnnotatedPackages", "io.sindri")
+    }
+}
+
+// Compiling the tests is the point — running them is the JUnit build's job, so `build` compiles
+// the test sources (Error Prone runs as part of that) without executing the suite twice.
+tasks.test {
+    enabled = false
+}
+
+tasks.named("check") {
+    dependsOn(tasks.compileTestJava)
+}
+
+// NullAway enforces a nullness contract on the tool's own API. Tests deliberately break it to reach
+// the defensive guards those methods exist to provide, and the canonical guide requires synthetic
+// inputs to cover guards normal input cannot. Enforcing it here would mean deleting the tests that
+// hold branch coverage at 100%, so it is scoped to `src`; every other Error Prone check still
+// applies to the test tree.
+tasks.compileTestJava {
+    options.errorprone {
+        check("NullAway", CheckSeverity.OFF)
     }
 }
