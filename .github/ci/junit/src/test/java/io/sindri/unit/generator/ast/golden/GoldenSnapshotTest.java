@@ -16,6 +16,7 @@ import io.sindri.ast.data.HttpRouteData;
 import io.sindri.generator.ast.cli.AstCliDataFileGenerator;
 import io.sindri.generator.ast.container.AstContainerDataFileGenerator;
 import io.sindri.generator.ast.event.AstEventDataFileGenerator;
+import io.sindri.generator.ast.grpc.AstGrpcDataFileGenerator;
 import io.sindri.generator.ast.http.AstHttpDataFileGenerator;
 import io.valkyrja.http.routing.data.DynamicRoute;
 import io.valkyrja.http.routing.data.Parameter;
@@ -112,6 +113,18 @@ final class GoldenSnapshotTest {
         new AstEventDataFileGenerator().generateFile(dir.toString(), "AppEventData", PKG, listeners);
 
         assertGolden(dir.resolve("AppEventData.java"), "AppEventData.golden");
+    }
+
+    @Test
+    void grpcRoutingDataMatchesGolden(@TempDir Path dir) throws IOException {
+        Map<String, String> routes = new LinkedHashMap<>();
+        routes.put("/app.Greeter/SayHello", "fixtures.service.GreeterService::sayHello");
+        routes.put("/app.Greeter/SayGoodbye", "fixtures.service.GreeterService::sayGoodbye");
+
+        new AstGrpcDataFileGenerator()
+                .generateFile(dir.toString(), "AppGrpcRoutingData", PKG, routes);
+
+        assertGolden(dir.resolve("AppGrpcRoutingData.java"), "AppGrpcRoutingData.golden");
     }
 
     /**
