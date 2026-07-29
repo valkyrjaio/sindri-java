@@ -19,6 +19,8 @@ import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import io.sindri.ast.abstract_.AstReader;
 import io.sindri.ast.contract.CliRouteAttributeReaderContract;
+import io.sindri.ast.data.CliArgumentParameterData;
+import io.sindri.ast.data.CliOptionParameterData;
 import io.sindri.ast.data.result.CliRouteAttributeResult;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +38,7 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
                     "io.valkyrja.cli.middleware.contract.ProcessExitingMiddlewareContract");
 
     private final MiddlewareClassifier classifier = new MiddlewareClassifier();
+    private final CliRouteParameterReader parameterReader = new CliRouteParameterReader();
     private final MiddlewareClassifier.SourceResolver resolver;
 
     /** No-op resolver: without a way to resolve middleware sources, no middleware is classified. */
@@ -124,10 +127,20 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
                     }
                 }
                 List<List<String>> middleware = classifyMiddleware(method, importMap, pkg);
+                List<CliArgumentParameterData> arguments =
+                        parameterReader.updateArguments(method, importMap, pkg);
+                List<CliOptionParameterData> options =
+                        parameterReader.updateOptions(method, importMap, pkg);
                 routeMap.put(
                         name,
                         buildRouteValue(
-                                name, description, handlerClass, handlerMethod, middleware));
+                                name,
+                                description,
+                                handlerClass,
+                                handlerMethod,
+                                middleware,
+                                arguments,
+                                options));
             }
         }
         return new CliRouteAttributeResult(routeMap);
@@ -136,14 +149,16 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
     /**
      * Build the {@code Supplier<RouteContract>} expression stored as a route's value, e.g. {@code
      * () -> new Route("name", "description", Handler::method)}. Fully qualified names are used so
-     * the generated file needs no extra imports. (Arguments/options are a follow-up — see TODO.)
+     * the generated file needs no extra imports.
      */
     private Expression buildRouteValue(
             String name,
             String description,
             String handlerClass,
             String handlerMethod,
-            List<List<String>> middleware) {
+            List<List<String>> middleware,
+            List<CliArgumentParameterData> arguments,
+            List<CliOptionParameterData> options) {
         String handlerRef = !handlerClass.isEmpty() ? handlerClass + "::" + handlerMethod : "null";
 
         StringBuilder supplier =
@@ -154,18 +169,93 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
                                 + escapeJava(description)
                                 + "\", "
                                 + handlerRef);
-        // The short constructor covers a route with no middleware; any middleware needs the full
-        // constructor, whose null helpText and empty arguments/options match the short defaults
-        // (arguments/options are a follow-up — see TODO). Otherwise the middleware would be
-        // dropped.
-        if (middleware.stream().anyMatch(list -> !list.isEmpty())) {
+        // The short constructor covers a route with no middleware, arguments or options; anything
+        // more needs the full constructor, whose null helpText matches the short default.
+        // Otherwise the middleware, arguments or options would be dropped.
+        if (middleware.stream().anyMatch(list -> !list.isEmpty())
+                || !arguments.isEmpty()
+                || !options.isEmpty()) {
             supplier.append(", null, ")
                     .append(emitMiddlewareLists(middleware))
-                    .append(", java.util.List.of(), java.util.List.of()");
+                    .append(", ")
+                    .append(emitArguments(arguments))
+                    .append(", ")
+                    .append(emitOptions(options));
         }
         supplier.append(")");
 
         return StaticJavaParser.parseExpression(supplier.toString());
+    }
+
+    /** Emit the argument parameters a command declares. */
+    private String emitArguments(List<CliArgumentParameterData> arguments) {
+        StringBuilder sb = new StringBuilder("java.util.List.of(");
+
+        for (int i = 0; i < arguments.size(); i++) {
+            CliArgumentParameterData argument = arguments.get(i);
+            sb.append("new io.valkyrja.cli.routing.data.ArgumentParameter(\"")
+                    .append(escapeJava(argument.name()))
+                    .append("\", \"")
+                    .append(escapeJava(argument.description()))
+                    .append("\", io.valkyrja.cli.routing.enum_.ArgumentMode.")
+                    .append(argument.mode())
+                    .append(", io.valkyrja.cli.routing.enum_.ArgumentValueMode.")
+                    .append(argument.valueMode())
+                    .append(", java.util.List.of())");
+
+            if (i < arguments.size() - 1) {
+                sb.append(", ");
+            }
+        }
+
+        return sb.append(")").toString();
+    }
+
+    /** Emit the option parameters a command declares. */
+    private String emitOptions(List<CliOptionParameterData> options) {
+        StringBuilder sb = new StringBuilder("java.util.List.of(");
+
+        for (int i = 0; i < options.size(); i++) {
+            CliOptionParameterData option = options.get(i);
+            sb.append("new io.valkyrja.cli.routing.data.OptionParameter(\"")
+                    .append(escapeJava(option.name()))
+                    .append("\", \"")
+                    .append(escapeJava(option.description()))
+                    .append("\", \"")
+                    .append(escapeJava(option.valueDisplayName()))
+                    .append("\", \"")
+                    .append(escapeJava(option.defaultValue()))
+                    .append("\", ")
+                    .append(emitStringList(option.shortNames()))
+                    .append(", ")
+                    .append(emitStringList(option.validValues()))
+                    .append(", java.util.List.of(), io.valkyrja.cli.routing.enum_.OptionMode.")
+                    .append(option.mode())
+                    .append(", io.valkyrja.cli.routing.enum_.OptionValueMode.")
+                    .append(option.valueMode())
+                    .append(")");
+
+            if (i < options.size() - 1) {
+                sb.append(", ");
+            }
+        }
+
+        return sb.append(")").toString();
+    }
+
+    /** Emit a list of string literals. */
+    private String emitStringList(List<String> values) {
+        StringBuilder sb = new StringBuilder("java.util.List.of(");
+
+        for (int i = 0; i < values.size(); i++) {
+            sb.append("\"").append(escapeJava(values.get(i))).append("\"");
+
+            if (i < values.size() - 1) {
+                sb.append(", ");
+            }
+        }
+
+        return sb.append(")").toString();
     }
 
     private String escapeJava(String value) {
