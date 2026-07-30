@@ -80,3 +80,39 @@ tasks.jacocoTestReport {
         html.required.set(true)
     }
 }
+
+// The floor. Coverage was reported here and enforced nowhere: `junit` ran `test` finalized by
+// `jacocoTestReport`, so the report was generated and then nothing asserted anything about it.
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
+            }
+        }
+        // Per class as well as per bundle. A bundle-wide rule is not enough: a large, well-covered
+        // codebase absorbs one entirely untested new class almost without moving, so the aggregate
+        // stays high while the new file is at zero. A class-level rule fails on that file itself.
+        rule {
+            element = "CLASS"
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "1.00".toBigDecimal()
+            }
+        }
+    }
+}
