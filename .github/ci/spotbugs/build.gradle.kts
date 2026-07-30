@@ -14,7 +14,7 @@ import com.github.spotbugs.snom.SpotBugsTask
 plugins {
     java
     id("com.github.spotbugs") version "6.5.9"
-    id("com.github.ben-manes.versions") version "0.56.0"
+    id("com.github.ben-manes.versions") version "0.57.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
@@ -54,13 +54,13 @@ dependencies {
 
     implementation("io.valkyrja:valkyrja:26.4.1")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.1")
 
     // Mirrors the JUnit build's test classpath — needed only so the tests compile here.
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testImplementation("org.mockito:mockito-core:5.23.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
-    testImplementation("org.jspecify:jspecify:1.0.0")
+    testImplementation("org.jspecify:jspecify:1.0.1")
 }
 
 spotbugs {

@@ -13,7 +13,7 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     java
     id("net.ltgt.errorprone") version "5.1.0"
-    id("com.github.ben-manes.versions") version "0.56.0"
+    id("com.github.ben-manes.versions") version "0.57.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
@@ -48,7 +48,7 @@ sourceSets {
 dependencies {
     implementation("io.valkyrja:valkyrja:26.4.1")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
-    compileOnly("org.jspecify:jspecify:1.0.0")
+    compileOnly("org.jspecify:jspecify:1.0.1")
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
     errorprone("com.uber.nullaway:nullaway:0.13.8")
 
@@ -56,7 +56,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testImplementation("org.mockito:mockito-core:5.23.0")
     testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
-    testImplementation("org.jspecify:jspecify:1.0.0")
+    testImplementation("org.jspecify:jspecify:1.0.1")
 }
 
 fun isNonStable(version: String): Boolean {
