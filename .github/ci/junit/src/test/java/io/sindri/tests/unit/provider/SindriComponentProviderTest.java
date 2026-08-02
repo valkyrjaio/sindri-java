@@ -8,12 +8,19 @@
 
 package io.sindri.tests.unit.provider;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.sindri.provider.SindriAstServiceProvider;
+import io.sindri.provider.SindriCliRouteProvider;
+import io.sindri.provider.SindriCommandServiceProvider;
 import io.sindri.provider.SindriComponentProvider;
 import io.valkyrja.application.kernel.contract.ApplicationContract;
+import io.valkyrja.application.provider.CliApplicationComponentProvider;
 import io.valkyrja.container.manager.Container;
 import org.junit.jupiter.api.Test;
 
@@ -24,13 +31,43 @@ final class SindriComponentProviderTest {
     private final ApplicationContract app = mock(ApplicationContract.class);
 
     @Test
-    void exposesAllProviderLists() {
-        assertNotNull(provider.getComponentProviders(app));
-        assertNotNull(provider.getContainerProviders(app));
-        assertNotNull(provider.getEventProviders(app));
-        assertNotNull(provider.getCliProviders(app));
-        assertNotNull(provider.getHttpProviders(app));
-        assertNotNull(provider.getGrpcProviders(app));
+    void getComponentProvidersReturnsTheComponentProviders() {
+        var providers = provider.getComponentProviders(app);
+
+        assertEquals(1, providers.size());
+        assertInstanceOf(CliApplicationComponentProvider.class, providers.get(0));
+    }
+
+    @Test
+    void getContainerProvidersReturnsTheServiceProviders() {
+        var providers = provider.getContainerProviders(app);
+
+        assertEquals(2, providers.size());
+        assertInstanceOf(SindriAstServiceProvider.class, providers.get(0));
+        assertInstanceOf(SindriCommandServiceProvider.class, providers.get(1));
+    }
+
+    @Test
+    void getEventProvidersIsEmpty() {
+        assertTrue(provider.getEventProviders(app).isEmpty());
+    }
+
+    @Test
+    void getCliProvidersReturnsTheCliRouteProviders() {
+        var providers = provider.getCliProviders(app);
+
+        assertEquals(1, providers.size());
+        assertInstanceOf(SindriCliRouteProvider.class, providers.get(0));
+    }
+
+    @Test
+    void getHttpProvidersIsEmpty() {
+        assertTrue(provider.getHttpProviders(app).isEmpty());
+    }
+
+    @Test
+    void getGrpcProvidersIsEmpty() {
+        assertTrue(provider.getGrpcProviders(app).isEmpty());
     }
 
     @Test
