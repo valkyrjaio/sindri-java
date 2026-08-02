@@ -1,5 +1,5 @@
 /*
- * This file is part of the Valkyrja Framework package.
+ * This file is part of the Sindri package.
  *
  * (c) Melech Mizrachi <melechmizrachi@gmail.com>
  *
