@@ -114,7 +114,7 @@ Bug fixes are provided until 3 months after the next major release. Security
 fixes are provided for 2 years after the initial release.
 
 | Version | Java    | Release        | Bug Fixes Until | Security Fixes Until |
-|:--------|:--------|:---------------|:----------------|:---------------------|
+| :------ | :------ | :------------- | :-------------- | :------------------- |
 | 26      | 21 – 25 | March 31, 2026 | Q2 2027         | Q1 2028              |
 | 27      | 23 – 25 | Q1 2027        | Q2 2028         | Q1 2029              |
 | 28      | 25+     | Q1 2028        | Q2 2029         | Q1 2030              |
@@ -141,23 +141,13 @@ Sindri is open-source software licensed under the
 [MIT license][MIT license url]. See [`LICENSE.md`](./LICENSE.md).
 
 [Valkyrja url]: https://valkyrja.io
-
 [framework url]: https://github.com/valkyrjaio/valkyrja-java
-
 [github sindri]: https://github.com/valkyrjaio/sindri-java
-
 [docs url]: https://github.com/valkyrjaio/valkyrja-java/blob/26.x/src/main/java/io/valkyrja/README.md
-
 [Versioning and Release Process url]: https://github.com/valkyrjaio/valkyrja-java/blob/26.x/src/main/java/io/valkyrja/VERSIONING_AND_RELEASE_PROCESS.md
-
 [contributing url]: https://github.com/valkyrjaio/.github/blob/master/CONTRIBUTING.md
-
 [vocabulary url]: https://github.com/valkyrjaio/.github/blob/master/VOCABULARY.md
-
 [security vulnerabilities url]: https://github.com/valkyrjaio/.github/blob/master/SECURITY.md
-
 [semantic versioning url]: https://semver.org/
-
 [MIT license url]: https://opensource.org/licenses/MIT
-
 [license url]: ./LICENSE.md
