@@ -33,11 +33,15 @@ tasks.named<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask>("
 
 spotless {
     java {
-        // The JUnit build's tests are the repo's other Java source tree; format them too.
+        // The JUnit and ArchUnit builds hold the repo's other Java source trees; format them too.
         // Scoped to `src/test/java` on purpose — `src/test/resources` holds .java files that are
         // AST *input samples*, parsed as text by the readers under test. Formatting them (or
         // injecting a license header) rewrites the very source those tests assert on.
-        target("src/**/*.java", ".github/ci/junit/src/test/java/**/*.java")
+        target(
+            "src/**/*.java",
+            ".github/ci/junit/src/test/java/**/*.java",
+            ".github/ci/archunit/src/test/java/**/*.java",
+        )
         googleJavaFormat("1.27.0").aosp()
         licenseHeader(
             """/*
