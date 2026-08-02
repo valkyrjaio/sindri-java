@@ -1,6 +1,25 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.5...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.6...26.x)
+
+## [v26.4.6](https://github.com/valkyrjaio/sindri-java/compare/v26.4.5...v26.4.6) - 2026-08-02
+
+* [Workflow] ci: Update .github workflow refs to v26.18.2 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/88
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/87
+* [Workflow] ci: Expose the allow diverged input on the rebase to master workflow by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/89
+* [Git] chore: Ignore the .worktrees directory by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/92
+* [Workflow] ci: Remove the unused check outdated dependencies workflow by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/93
+* [Workflow] ci: Update .github workflow refs to v26.19.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/94
+* [Workflow] ci: Pass each reusable workflow the secrets it declares by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/95
+* [Spotless] style: Format the ArchUnit test tree by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/96
+* [Markdown] style: Normalize the formatting of every document by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/97
+* [Workflow] ci: Update .github workflow refs to v26.20.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/99
+* [Workflow] ci: Add the Markdown formatting check by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/98
+* [Copyright] style: Update header to add copyright year, remove email, and name the license by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/100
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/101
+* [Provider] test: Assert every ComponentProviderContract method by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/102
+* [Workflow] ci: Update .github workflow refs to v26.21.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/103
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/104
 
 ## [v26.4.5](https://github.com/valkyrjaio/sindri-java/compare/v26.4.4...v26.4.5) - 2026-08-01
 
