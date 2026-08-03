@@ -6,6 +6,18 @@
  * Released under the MIT License. See LICENSE.md for details.
  */
 
+import io.valkyrja.spotless.CopyrightHeader
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("io.valkyrja:ci-spotless-java:26.0.0")
+    }
+}
+
 plugins {
     id("com.diffplug.spotless") version "8.9.0"
     id("com.github.ben-manes.versions") version "0.58.0"
@@ -42,16 +54,6 @@ spotless {
             ".github/ci/archunit/src/test/java/**/*.java",
         )
         googleJavaFormat("1.27.0").aosp()
-        licenseHeader(
-            """/*
- * This file is part of the Sindri package.
- *
- * Copyright (c) 2016-present Melech Mizrachi
- *
- * Released under the MIT License. See LICENSE.md for details.
- */
-
-"""
-        )
+        licenseHeader(CopyrightHeader.block("Sindri"))
     }
 }
