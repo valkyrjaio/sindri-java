@@ -1,6 +1,15 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.6...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.7...26.x)
+
+## [v26.4.7](https://github.com/valkyrjaio/sindri-java/compare/v26.4.6...v26.4.7) - 2026-08-03
+
+* [Copyright] ci: Add the copyright header check by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/105
+* [Workflow] ci: Update .github workflow refs to v26.22.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/106
+* [Spotless] refactor: Take the copyright header from the shared package by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/107
+* [Spotless] build: Take the copyright header from io.valkyrja:ci-spotless by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/108
+* [Workflow] ci: Update .github workflow refs to v26.23.0 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/109
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/111
 
 ## [v26.4.6](https://github.com/valkyrjaio/sindri-java/compare/v26.4.5...v26.4.6) - 2026-08-02
 
