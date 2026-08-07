@@ -10,7 +10,7 @@ plugins {
     java
     application
     id("com.vanniktech.maven.publish") version "0.37.0"
-    id("com.github.ben-manes.versions") version "0.59.0"
+    id("com.github.ben-manes.versions") version "0.60.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
@@ -25,11 +25,11 @@ repositories {
 }
 
 dependencies {
-    implementation("io.valkyrja:valkyrja:26.7.1")
+    implementation("io.valkyrja:valkyrja:26.8.0")
     // Framework sources jar on the runtime classpath: Sindri resolves framework provider `.java`
     // from the classpath during generation (GenerateDataFromAst.resolveSourceFromClasspath) so
     // their publishers()/nested providers are scanned, the way PHP uses ReflectionClass::getFileName().
-    runtimeOnly("io.valkyrja:valkyrja:26.7.1:sources")
+    runtimeOnly("io.valkyrja:valkyrja:26.8.0:sources")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
 }
