@@ -10,7 +10,7 @@ plugins {
     java
     application
     id("com.vanniktech.maven.publish") version "0.37.0"
-    id("com.github.ben-manes.versions") version "0.60.0"
+    id("com.github.ben-manes.versions") version "0.61.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
