@@ -51,7 +51,7 @@ dependencies {
     // toolVersion string is reported as outdated every run but never updated — it drifts forever.
     spotbugs("com.github.spotbugs:spotbugs:4.10.3")
 
-    implementation("io.valkyrja:valkyrja:26.8.2")
+    implementation("io.valkyrja:valkyrja:26.8.3")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
 
