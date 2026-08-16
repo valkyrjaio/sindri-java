@@ -9,8 +9,7 @@
 package io.sindri.tests.fixtures.grpc.controller;
 
 /**
- * Fixture whose service name is a constant reference rather than a string literal, which sindri
- * cannot resolve syntactically.
+ * Fixture whose service name is a constant reference rather than a string literal.
  */
 @Service(service = SERVICE_NAME)
 public class TestNonLiteralGrpcControllerFixture {
