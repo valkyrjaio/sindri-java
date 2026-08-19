@@ -3,9 +3,7 @@ package vendor;
 import java.util.List;
 
 /**
- * A stand-in for a framework component provider that lives OUTSIDE the app namespace. It is loaded
- * by Sindri from the classpath (this file is a test resource), exercising the sources-jar fallback
- * in fqnToFilePath, and it nests a further framework provider to prove deep recursion.
+ * A component provider outside the app namespace, loaded by Sindri from the classpath.
  */
 public final class FrameworkComponentProvider {
     public List<Object> getComponentProviders(Object app) {
