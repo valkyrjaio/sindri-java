@@ -49,7 +49,7 @@ dependencies {
     // The SpotBugs tool version is declared here rather than via `spotbugs { toolVersion }` so it
     // is a real dependency notation. useLatestVersions only rewrites dependency notations, so a
     // toolVersion string is reported as outdated every run but never updated — it drifts forever.
-    spotbugs("com.github.spotbugs:spotbugs:4.10.3")
+    spotbugs("com.github.spotbugs:spotbugs:4.10.4")
 
     implementation("io.valkyrja:valkyrja:26.9.6")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
