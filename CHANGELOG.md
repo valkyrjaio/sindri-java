@@ -1,6 +1,12 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.19...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.20...26.x)
+
+## [v26.4.20](https://github.com/valkyrjaio/sindri-java/compare/v26.4.19...v26.4.20) - 2026-08-21
+
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/148
+* [Workflow] ci: Update .github workflow refs to v26.25.2 by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/149
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/150
 
 ## [v26.4.19](https://github.com/valkyrjaio/sindri-java/compare/v26.4.18...v26.4.19) - 2026-08-20
 
