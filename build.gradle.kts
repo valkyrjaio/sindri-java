@@ -25,11 +25,11 @@ repositories {
 }
 
 dependencies {
-    implementation("io.valkyrja:valkyrja:26.9.8")
+    implementation("io.valkyrja:valkyrja:26.9.9")
     // Framework sources jar on the runtime classpath: Sindri resolves framework provider `.java`
     // from the classpath during generation (GenerateDataFromAst.resolveSourceFromClasspath) so
     // their publishers()/nested providers are scanned, the way PHP uses ReflectionClass::getFileName().
-    runtimeOnly("io.valkyrja:valkyrja:26.9.8:sources")
+    runtimeOnly("io.valkyrja:valkyrja:26.9.9:sources")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
 }
