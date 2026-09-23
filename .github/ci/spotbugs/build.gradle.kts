@@ -51,14 +51,14 @@ dependencies {
     // toolVersion string is reported as outdated every run but never updated — it drifts forever.
     spotbugs("com.github.spotbugs:spotbugs:4.10.4")
 
-    implementation("io.valkyrja:valkyrja:26.10.6")
+    implementation("io.valkyrja:valkyrja:26.10.7")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
 
     // Mirrors the JUnit build's test classpath — needed only so the tests compile here.
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("org.mockito:mockito-core:5.23.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    testImplementation("org.mockito:mockito-core:5.24.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.24.0")
     testImplementation("org.jspecify:jspecify:1.0.1")
 }
 
