@@ -12,7 +12,7 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     java
     id("net.ltgt.errorprone") version "5.1.1"
-    id("com.github.ben-manes.versions") version "0.64.0"
+    id("com.github.ben-manes.versions") version "0.65.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
@@ -45,7 +45,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation("io.valkyrja:valkyrja:26.10.10")
+    implementation("io.valkyrja:valkyrja:26.10.11")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
     errorprone("com.google.errorprone:error_prone_core:2.50.0")
