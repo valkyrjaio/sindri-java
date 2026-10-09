@@ -186,6 +186,9 @@ final class GenerateDataFromConfigCommandTest {
                     public List<Object> getRoutes() {
                         return List.of(
                                 new Route("manual-cli", "Manual", AppCliRouteProvider::run),
+                                // Only gRPC caches a builder chain, so this one is skipped.
+                                new Route("chained-cli", "Manual", AppCliRouteProvider::run)
+                                        .withName("renamed-cli"),
                                 // A non-string name (arg 0) cannot be keyed, so this is skipped.
                                 new Route(NoName.VALUE, "Skip", AppCliRouteProvider::run));
                     }
@@ -221,6 +224,9 @@ final class GenerateDataFromConfigCommandTest {
                                 new DynamicRoute("/manual/{id}", "manual.show",
                                         "^\\\\/manual\\\\/(?<id>\\\\d+)$", List.of(),
                                         AppHttpRouteProvider::getHandler),
+                                // Only gRPC caches a builder chain, so this one is skipped.
+                                new Route("/chained", "chained", AppHttpRouteProvider::getHandler)
+                                        .withAddedRequestMethods(RequestMethod.PATCH),
                                 // A non-string name (arg 1) cannot be keyed, so this is skipped.
                                 new Route("/skip", NoName.VALUE, AppHttpRouteProvider::getHandler),
                                 // Too few arguments to read a name — also skipped.
@@ -322,6 +328,8 @@ final class GenerateDataFromConfigCommandTest {
                     public List<Object> getRoutes() {
                         return List.of(
                                 new Route("/app.Manual/Do", AppGrpcRouteProvider::run),
+                                new Route("/app.Manual/Stream", AppGrpcRouteProvider::run)
+                                        .withServerStreaming(true),
                                 // A non-string method (arg 0) cannot be keyed, so this is skipped.
                                 new Route(NoName.VALUE, AppGrpcRouteProvider::run));
                     }
@@ -431,6 +439,13 @@ final class GenerateDataFromConfigCommandTest {
                         "\"/app.Manual/Do\", () -> new io.valkyrja.grpc.routing.data.Route(\"/app.Manual/Do\","
                                 + " app.AppGrpcRouteProvider::run)"),
                 () -> "provider gRPC route not combined:\n" + grpc);
+        // A streaming method is a builder chain, keyed from the construction at its base.
+        assertTrue(
+                grpc.contains(
+                        "\"/app.Manual/Stream\", () -> new io.valkyrja.grpc.routing.data.Route("
+                                + "\"/app.Manual/Stream\", app.AppGrpcRouteProvider::run)"
+                                + ".withServerStreaming(true)"),
+                () -> "chained gRPC route not keyed from its base construction:\n" + grpc);
         assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(grpc));
     }
 
@@ -488,6 +503,12 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 http.contains("Map.entry(\"PUT\", Map.of(\"/manual\", \"manual\"))"),
                 () -> "provider route not registered in paths():\n" + http);
+
+        // Http must not cache a builder chain. The generated data derives the path, the name and
+        // the request methods from the construction, and a builder call changes all three.
+        assertFalse(
+                http.contains("/chained"),
+                () -> "a chained Http route reached the cache:\n" + http);
     }
 
     @Test
@@ -581,6 +602,11 @@ final class GenerateDataFromConfigCommandTest {
                         "\"manual-cli\", () -> new io.valkyrja.cli.routing.data.Route(\"manual-cli\","
                                 + " \"Manual\", app.AppCliRouteProvider::run)"),
                 () -> "provider CLI route not combined:\n" + cli);
+        // Cli must not cache a builder chain. The generated data keys by name, and withName
+        // changes the name the runtime keys by.
+        assertFalse(
+                cli.contains("chained-cli"),
+                () -> "a chained Cli route reached the cache:\n" + cli);
         assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(cli));
     }
 
