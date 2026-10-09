@@ -17,6 +17,11 @@ import org.junit.jupiter.api.Test;
 
 public final class RouteProviderReaderTest {
 
+    private static final String ROUTE = "new io.valkyrja.grpc.routing.data.Route(";
+
+    private static final String FIXTURE =
+            "io.sindri.tests.fixtures.grpc.provider.TestChainedRouteProviderFixture";
+
     private final RouteProviderReader reader = new RouteProviderReader();
 
     private String fixturePath(String relative) {
@@ -85,6 +90,28 @@ public final class RouteProviderReaderTest {
         assertTrue(first.contains("io.valkyrja.http.message.enum_.RequestMethod.GET"));
         assertTrue(result.routes().get(2).toString().contains("Unmapped.VALUE"));
         assertTrue(result.routes().get(3).toString().contains("new UnmappedRoute("));
+    }
+
+    @Test
+    void readFile_separatesChainedRoutesFromBareConstructions() {
+        RouteProviderResult result =
+                reader.readFile(fixturePath("Grpc/Provider/TestChainedRouteProviderFixture.java"));
+
+        assertEquals(1, result.routes().size());
+        assertEquals(
+                ROUTE + "\"/pkg.Ping/Ping\", " + FIXTURE + "::ping)",
+                result.routes().get(0).toString());
+
+        assertEquals(2, result.chainedRoutes().size());
+        assertEquals(
+                ROUTE + "\"/pkg.Ping/Fanout\", " + FIXTURE + "::fanout).withServerStreaming(true)",
+                result.chainedRoutes().get(0).toString());
+        assertEquals(
+                ROUTE
+                        + "\"/pkg.Ping/Echo\", "
+                        + FIXTURE
+                        + "::echo).withClientStreaming(true).withServerStreaming(true)",
+                result.chainedRoutes().get(1).toString());
     }
 
     @Test
