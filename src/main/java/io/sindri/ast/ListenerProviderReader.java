@@ -212,7 +212,8 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
      * @return the event class name, or an empty string when the argument names no event class
      */
     private String resolveEventId(Expression argument, Map<String, String> typeMap) {
-        // An argument that is not a class, an array type and a primitive type name no event.
+        // An argument that is not a class expression names no event, and neither does an array
+        // or a primitive type.
         if (!argument.isClassExpr() || !argument.asClassExpr().getType().isClassOrInterfaceType()) {
             return "";
         }
