@@ -22,16 +22,23 @@ final class RouteProviderResultTest {
     @Test
     void noArgConstructorIsEmpty() {
         assertTrue(new RouteProviderResult().controllerClasses().isEmpty());
+        assertTrue(new RouteProviderResult().routes().isEmpty());
+        assertTrue(new RouteProviderResult().chainedRoutes().isEmpty());
     }
 
     @Test
     void mergeUnionsControllersAndConcatenatesRoutes() {
-        var a = new RouteProviderResult(List.of("A"), List.of(new NameExpr("x")));
-        var b = new RouteProviderResult(List.of("A", "B"), List.of(new NameExpr("y")));
+        var a =
+                new RouteProviderResult(
+                        List.of("A"), List.of(new NameExpr("x")), List.of(new NameExpr("cx")));
+        var b =
+                new RouteProviderResult(
+                        List.of("A", "B"), List.of(new NameExpr("y")), List.of(new NameExpr("cy")));
 
         var merged = a.merge(b);
 
         assertEquals(List.of("A", "B"), merged.controllerClasses());
-        assertEquals(2, merged.routes().size());
+        assertEquals(List.of(new NameExpr("x"), new NameExpr("y")), merged.routes());
+        assertEquals(List.of(new NameExpr("cx"), new NameExpr("cy")), merged.chainedRoutes());
     }
 }

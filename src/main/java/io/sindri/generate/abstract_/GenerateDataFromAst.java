@@ -287,9 +287,15 @@ public abstract class GenerateDataFromAst {
                 }
             }
 
+            // Only gRPC reads a chained route: no gRPC builder changes the method, and the
+            // generated data holds nothing else that the construction's arguments decide.
+            java.util.List<Expression> providerRoutes =
+                    new java.util.ArrayList<>(routeProvider.routes());
+            providerRoutes.addAll(routeProvider.chainedRoutes());
+
             // Manually-defined provider routes (getRoutes()) — the gRPC Route's fully-qualified
             // method is its first constructor argument.
-            for (Expression routeExpr : routeProvider.routes()) {
+            for (Expression routeExpr : providerRoutes) {
                 String method = extractRouteArgString(routeExpr, 0);
                 if (!method.isEmpty()) {
                     routes.put(method, "() -> " + routeExpr);
@@ -340,8 +346,10 @@ public abstract class GenerateDataFromAst {
     }
 
     private String extractRouteArgString(Expression routeExpr, int index) {
-        // Callers only pass object-creation route expressions (RouteProviderReader filters them).
-        var arguments = routeExpr.asObjectCreationExpr().getArguments();
+        // A route expression is a construction, or a builder chain over one, and the
+        // construction is what carries the constructor arguments.
+        var arguments =
+                routeProviderReader.getRouteBase(routeExpr).asObjectCreationExpr().getArguments();
         if (index < arguments.size() && arguments.get(index).isStringLiteralExpr()) {
             return arguments.get(index).asStringLiteralExpr().getValue();
         }

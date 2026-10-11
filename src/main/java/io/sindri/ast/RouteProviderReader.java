@@ -66,6 +66,7 @@ public class RouteProviderReader extends AstReader implements RouteProviderReade
         qualifyMap.put(className, pkg.isEmpty() ? className : pkg + "." + className);
 
         List<Expression> routes = new ArrayList<>();
+        List<Expression> chainedRoutes = new ArrayList<>();
         MethodDeclaration routesMethod = methods.get("getRoutes");
         if (routesMethod != null) {
             findReturnExpr(routesMethod)
@@ -74,12 +75,30 @@ public class RouteProviderReader extends AstReader implements RouteProviderReade
                                 for (Expression item : extractListOfItems(returnExpr)) {
                                     if (item.isObjectCreationExpr()) {
                                         routes.add(qualify(item, qualifyMap));
+                                    } else if (getRouteBase(item).isObjectCreationExpr()) {
+                                        chainedRoutes.add(qualify(item, qualifyMap));
                                     }
                                 }
                             });
         }
 
-        return new RouteProviderResult(controllerClasses, routes);
+        return new RouteProviderResult(controllerClasses, routes, chainedRoutes);
+    }
+
+    /**
+     * Walk a builder chain back to the expression it is built from.
+     *
+     * @param expression the route expression
+     * @return the expression at the base of the chain
+     */
+    public Expression getRouteBase(Expression expression) {
+        Expression current = expression;
+
+        while (current.isMethodCallExpr() && current.asMethodCallExpr().getScope().isPresent()) {
+            current = current.asMethodCallExpr().getScope().get();
+        }
+
+        return current;
     }
 
     /**

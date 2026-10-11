@@ -14,10 +14,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.SequencedSet;
 
-public record RouteProviderResult(List<String> controllerClasses, List<Expression> routes) {
+public record RouteProviderResult(
+        List<String> controllerClasses, List<Expression> routes, List<Expression> chainedRoutes) {
 
     public RouteProviderResult() {
-        this(List.of(), List.of());
+        this(List.of(), List.of(), List.of());
     }
 
     public RouteProviderResult merge(RouteProviderResult other) {
@@ -27,6 +28,9 @@ public record RouteProviderResult(List<String> controllerClasses, List<Expressio
         List<Expression> merged = new ArrayList<>(routes);
         merged.addAll(other.routes);
 
-        return new RouteProviderResult(new ArrayList<>(classes), merged);
+        List<Expression> mergedChained = new ArrayList<>(chainedRoutes);
+        mergedChained.addAll(other.chainedRoutes);
+
+        return new RouteProviderResult(new ArrayList<>(classes), merged, mergedChained);
     }
 }
