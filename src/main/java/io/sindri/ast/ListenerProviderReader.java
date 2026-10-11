@@ -16,6 +16,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import io.sindri.ast.abstract_.AstReader;
 import io.sindri.ast.contract.ListenerProviderReaderContract;
+import io.sindri.ast.data.ListenerData;
 import io.sindri.ast.data.result.ListenerProviderResult;
 import io.sindri.ast.throwable.exception.AstFileReadException;
 import io.sindri.ast.throwable.exception.UnreadableListenerException;
@@ -31,15 +32,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
 public class ListenerProviderReader extends AstReader implements ListenerProviderReaderContract {
 
     /**
      * The builder calls this reader understands. A call outside this set can change the name the
-     * listener registers under, and the cache must match what the runtime collector receives, so
-     * an unknown call is a read failure rather than a listener cached under a guessed name.
+     * listener registers under, or the event it listens for, and the cache must match what the
+     * runtime collector receives, so an unknown call is a read failure rather than a listener
+     * cached under a guessed name.
      */
-    private static final Set<String> CHAINED_CALLS = Set.of("withName", "withHandler");
+    private static final Set<String> CHAINED_CALLS =
+            Set.of("withEventId", "withName", "withHandler");
 
     /** The extension a Java source file carries. */
     private static final String JAVA_SUFFIX = ".java";
@@ -73,6 +77,7 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
 
         List<String> listenerClasses = new ArrayList<>();
         Map<String, Expression> listeners = new LinkedHashMap<>();
+        Map<String, ListenerData> listenerData = new LinkedHashMap<>();
         for (Expression item : extractListOfItems(returnExpr)) {
             List<MethodCallExpr> chain = getChainedCalls(item);
             Expression base = chain.isEmpty() ? item : chain.getLast().getScope().orElseThrow();
@@ -81,10 +86,12 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
                 if (!fqn.isEmpty()) {
                     listenerClasses.add(fqn);
                 }
-                listeners.put(readName(item, base, chain), qualify(item, qualifyMap));
+                ListenerData data = readListener(item, base, chain, qualifyMap);
+                listeners.put(data.name(), qualify(item, qualifyMap));
+                listenerData.put(data.name(), data);
             }
         }
-        return new ListenerProviderResult(listenerClasses, listeners);
+        return new ListenerProviderResult(listenerClasses, listeners, listenerData);
     }
 
     /**
@@ -147,15 +154,24 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
     }
 
     /**
-     * Read the name a listener registers under: its construction's second argument, or the name a
-     * call in the builder chain over that construction replaces it with.
+     * Read the event a listener listens for and the name it registers under. Each one comes from
+     * the construction's arguments, or from the builder chain over that construction when a call in
+     * the chain replaces it.
      *
      * @param listener the listener expression
      * @param base the construction at the base of the listener expression
      * @param chain the builder chain over that construction, outermost call first
-     * @return the listener name
+     * @param typeMap the simple name to fully qualified name map for the provider
+     * @return the event id and the name the listener registers under
      */
-    private String readName(Expression listener, Expression base, List<MethodCallExpr> chain) {
+    private ListenerData readListener(
+            Expression listener,
+            Expression base,
+            List<MethodCallExpr> chain,
+            Map<String, String> typeMap) {
+        @Nullable Expression eventIdArgument = null;
+        @Nullable Expression nameArgument = null;
+
         for (MethodCallExpr call : chain) {
             String called = call.getNameAsString();
 
@@ -164,31 +180,78 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
                         "Could not read the listener through " + called + "(): " + listener);
             }
 
-            // The framework applies the outermost call last, so the first withName this walk
-            // reaches holds the name every call under it replaces.
-            if (called.equals("withName")) {
-                return readNameArgument(call.getArguments(), 0, listener);
+            // The framework applies the outermost call last, so the first withEventId and the
+            // first withName this walk reaches hold the values every call under them replaces.
+            if (eventIdArgument == null && called.equals("withEventId")) {
+                eventIdArgument = getArgument(call.getArguments(), 0);
+            }
+
+            if (nameArgument == null && called.equals("withName")) {
+                nameArgument = getArgument(call.getArguments(), 0);
             }
         }
 
-        return readNameArgument(base.asObjectCreationExpr().getArguments(), 1, listener);
+        NodeList<Expression> arguments = base.asObjectCreationExpr().getArguments();
+
+        if (eventIdArgument == null) {
+            eventIdArgument = getArgument(arguments, 0);
+        }
+
+        if (nameArgument == null) {
+            nameArgument = getArgument(arguments, 1);
+        }
+
+        String eventId = eventIdArgument == null ? "" : resolveEventId(eventIdArgument, typeMap);
+
+        if (eventId.isEmpty()) {
+            throw new UnreadableListenerException(
+                    "Could not read the listener event id from: " + listener);
+        }
+
+        if (nameArgument == null || !nameArgument.isStringLiteralExpr()) {
+            throw new UnreadableListenerException(
+                    "Could not read the listener name from: " + listener);
+        }
+
+        return new ListenerData(eventId, nameArgument.asStringLiteralExpr().asString());
     }
 
     /**
-     * Read a string literal argument's value.
+     * Resolve the event class a {@code .class} argument names, against the imports and the classes
+     * the provider's own package declares. A name neither of those knows stays as it is read,
+     * because the inlined listener keeps that name too and the two have to name one class.
+     *
+     * @param argument the argument naming the event class
+     * @param typeMap the simple name to fully qualified name map for the provider
+     * @return the event class name, or an empty string when the argument names no event class
+     */
+    private String resolveEventId(Expression argument, Map<String, String> typeMap) {
+        // An array type and a primitive type name no event, and the inlined listener qualifies an
+        // array's component type, which the index cannot follow.
+        if (!argument.isClassExpr() || !argument.asClassExpr().getType().isClassOrInterfaceType()) {
+            return "";
+        }
+
+        String typeName = argument.asClassExpr().getTypeAsString();
+        int nested = typeName.indexOf('.');
+        String outer = nested < 0 ? typeName : typeName.substring(0, nested);
+        String resolved = typeMap.get(outer);
+
+        if (resolved == null) {
+            return typeName;
+        }
+
+        return nested < 0 ? resolved : resolved + typeName.substring(nested);
+    }
+
+    /**
+     * Read the argument at a position, or nothing when the argument list is shorter than that.
      *
      * @param arguments the argument list to read from
      * @param index the argument's position
-     * @param listener the listener expression, for the failure message
-     * @return the literal's value
+     * @return the argument, or {@code null}
      */
-    private String readNameArgument(
-            NodeList<Expression> arguments, int index, Expression listener) {
-        if (index < arguments.size() && arguments.get(index).isStringLiteralExpr()) {
-            return arguments.get(index).asStringLiteralExpr().asString();
-        }
-
-        throw new UnreadableListenerException(
-                "Could not read the listener name from: " + listener);
+    private @Nullable Expression getArgument(NodeList<Expression> arguments, int index) {
+        return index < arguments.size() ? arguments.get(index) : null;
     }
 }

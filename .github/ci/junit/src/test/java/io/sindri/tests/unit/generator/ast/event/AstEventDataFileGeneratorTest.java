@@ -23,7 +23,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.SequencedSet;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
@@ -41,9 +43,13 @@ public final class AstEventDataFileGeneratorTest {
                 .parse(content);
     }
 
+    private static SequencedSet<String> listenerIds(String... ids) {
+        return new LinkedHashSet<>(java.util.List.of(ids));
+    }
+
     @Test
     void generateFile_empty_writesEmptyMaps(@TempDir Path tempDir) throws IOException {
-        generator.generateFile(tempDir.toString(), "AppEventData", "test.data", Map.of());
+        generator.generateFile(tempDir.toString(), "AppEventData", "test.data", Map.of(), Map.of());
 
         String content = Files.readString(tempDir.resolve("AppEventData.java"));
         assertTrue(content.contains("package test.data;"));
@@ -57,11 +63,46 @@ public final class AstEventDataFileGeneratorTest {
                 tempDir.toString(),
                 "AppEventData",
                 "test.data",
-                Map.of("user.created", "fixtures.handler.UserHandler::onUserCreated"));
+                Map.of("user.created", "fixtures.handler.UserHandler::onUserCreated"),
+                Map.of());
 
         String content = Files.readString(tempDir.resolve("AppEventData.java"));
         assertTrue(content.contains("\"user.created\""));
         assertTrue(content.contains("fixtures.handler.UserHandler::onUserCreated"));
+    }
+
+    @Test
+    void generateFile_withEvent_writesTheListenerIdIndex(@TempDir Path tempDir) throws IOException {
+        generator.generateFile(
+                tempDir.toString(),
+                "AppEventData",
+                "test.data",
+                Map.of("user.created", "fixtures.handler.UserHandler::onCreate"),
+                Map.of("fixtures.event.UserCreated", listenerIds("user.created")));
+
+        String content = Files.readString(tempDir.resolve("AppEventData.java"));
+        assertTrue(
+                content.contains("fixtures.event.UserCreated.class, java.util.stream.Stream.of("),
+                () -> "event index missing:\n" + content);
+        assertTrue(
+                content.contains("java.util.LinkedHashMap::new))"),
+                () -> "event index does not preserve the registration order:\n" + content);
+    }
+
+    @Test
+    void generateFile_withTwoListenersForOneEvent_writesBothIds(@TempDir Path tempDir)
+            throws IOException {
+        generator.generateFile(
+                tempDir.toString(),
+                "AppEventData",
+                "test.data",
+                Map.of(),
+                Map.of("fixtures.event.UserCreated", listenerIds("user.created", "user.audited")));
+
+        String content = Files.readString(tempDir.resolve("AppEventData.java"));
+        assertTrue(
+                content.contains("java.util.stream.Stream.of(\"user.created\", \"user.audited\")"),
+                () -> "the listener ids are not indexed in registration order:\n" + content);
     }
 
     @Test
@@ -71,7 +112,8 @@ public final class AstEventDataFileGeneratorTest {
         listeners.put("user.created", "fixtures.handler.UserHandler::onCreate");
         listeners.put("user.deleted", "fixtures.handler.UserHandler::onDelete");
 
-        generator.generateFile(tempDir.toString(), "AppEventData", "test.data", listeners);
+        generator.generateFile(
+                tempDir.toString(), "AppEventData", "test.data", listeners, Map.of());
 
         String content = Files.readString(tempDir.resolve("AppEventData.java"));
         assertTrue(content.contains("\"user.created\", fixtures.handler.UserHandler::onCreate,"));
@@ -95,11 +137,27 @@ public final class AstEventDataFileGeneratorTest {
             listeners.put("event." + i, "fixtures.handler.Handler" + i + "::onEvent" + i);
         }
 
-        generator.generateFile(tempDir.toString(), "AppEventData", "test.data", listeners);
+        generator.generateFile(
+                tempDir.toString(), "AppEventData", "test.data", listeners, Map.of());
 
         String content = Files.readString(tempDir.resolve("AppEventData.java"));
         assertTrue(content.contains("Map.ofEntries("));
         assertTrue(content.contains("Map.entry(\"event.1\""));
+    }
+
+    @Test
+    void generateFile_withManyEvents_usesMapOfEntries(@TempDir Path tempDir) throws IOException {
+        Map<String, SequencedSet<String>> events = new LinkedHashMap<>();
+        for (int i = 1; i <= 11; i++) {
+            events.put("fixtures.event.Event" + i, listenerIds("listener." + i));
+        }
+
+        generator.generateFile(tempDir.toString(), "AppEventData", "test.data", Map.of(), events);
+
+        String content = Files.readString(tempDir.resolve("AppEventData.java"));
+        assertTrue(
+                content.contains("Map.entry(fixtures.event.Event1.class,"),
+                () -> "event index not wrapped in Map.entry:\n" + content);
     }
 
     @Test
@@ -114,7 +172,8 @@ public final class AstEventDataFileGeneratorTest {
                 tempDir.toString(),
                 "AppEventData",
                 "test.data",
-                Map.of(name, "fixtures.handler.UserHandler::onCreate"));
+                Map.of(name, "fixtures.handler.UserHandler::onCreate"),
+                Map.of("fixtures.event.UserCreated", listenerIds(name)));
 
         String content = Files.readString(tempDir.resolve("AppEventData.java"));
         CompilationUnit generated =
@@ -156,4 +215,19 @@ public final class AstEventDataFileGeneratorTest {
                 () -> "javac rejects the escaped literal: " + literal.getValue());
     }
 
+    @Test
+    void generateFile_eventWithNoListeners_writesAnEmptyIndex(@TempDir Path tempDir)
+            throws IOException {
+        generator.generateFile(
+                tempDir.toString(),
+                "AppEventData",
+                "test.data",
+                Map.of(),
+                Map.of("fixtures.event.UserCreated", listenerIds()));
+
+        String content = Files.readString(tempDir.resolve("AppEventData.java"));
+        assertTrue(
+                content.contains("fixtures.event.UserCreated.class, Map.of()"),
+                () -> "an event with no listeners did not write an empty index:\n" + content);
+    }
 }

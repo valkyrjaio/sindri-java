@@ -9,6 +9,7 @@
 package io.sindri.ast.data.result;
 
 import com.github.javaparser.ast.expr.Expression;
+import io.sindri.ast.data.ListenerData;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -17,10 +18,12 @@ import java.util.Map;
 import java.util.SequencedSet;
 
 public record ListenerProviderResult(
-        List<String> listenerClasses, Map<String, Expression> listeners) {
+        List<String> listenerClasses,
+        Map<String, Expression> listeners,
+        Map<String, ListenerData> listenerData) {
 
     public ListenerProviderResult() {
-        this(List.of(), Map.of());
+        this(List.of(), Map.of(), Map.of());
     }
 
     public ListenerProviderResult merge(ListenerProviderResult other) {
@@ -30,6 +33,9 @@ public record ListenerProviderResult(
         Map<String, Expression> mergedListeners = new LinkedHashMap<>(listeners);
         mergedListeners.putAll(other.listeners);
 
-        return new ListenerProviderResult(new ArrayList<>(classes), mergedListeners);
+        Map<String, ListenerData> mergedData = new LinkedHashMap<>(listenerData);
+        mergedData.putAll(other.listenerData);
+
+        return new ListenerProviderResult(new ArrayList<>(classes), mergedListeners, mergedData);
     }
 }

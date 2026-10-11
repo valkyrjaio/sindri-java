@@ -635,9 +635,17 @@ final class GenerateDataFromConfigCommandTest {
                                 + " \"app.chained\", app.AppListener::on)"
                                 + ".withName(\"app.renamed\")"),
                 () -> "chained provider listener missing:\n" + event);
-        // sindri reads no listener annotation, because the framework declares none and its
-        // collection has no attribute collector, so the cached and the uncached path agree on
-        // collecting nothing from AppListener.
+        // Both listeners are indexed under their event class in the order the provider declares
+        // them, which is the order the dispatcher runs them in.
+        assertTrue(
+                event.contains(
+                        "app.AppEvent.class, java.util.stream.Stream.of(\"app.event\","
+                                + " \"app.renamed\").collect("),
+                () -> "event index missing, or not in declaration order:\n" + event);
+        // The index above names every listener it holds, so an annotated listener for the same
+        // event would fail that assertion whatever name it carried. sindri reads no listener
+        // annotation, because the framework declares none and its collection has no attribute
+        // collector, so the cached and the uncached path agree on collecting nothing.
         assertFalse(
                 event.contains("app.annotated"),
                 () -> "an annotated listener reached the cache:\n" + event);

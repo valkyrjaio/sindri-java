@@ -77,6 +77,32 @@ public final class ListenerProviderReaderTest {
         String listener = result.listeners().get("same.package").toString();
         assertTrue(listener.contains("TestSamePackageEventFixture.class"));
         assertTrue(listener.contains("HANDLER"));
+        // The index names the same class the inlined listener does, rather than guessing a
+        // package for it.
+        assertEquals(
+                "TestSamePackageEventFixture", result.listenerData().get("same.package").eventId());
+    }
+
+    @Test
+    void readFile_nestedEventClass_resolvesThroughItsOuterClass() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath(
+                                "Event/Provider/TestNestedEventIdListenerProviderFixture.java"));
+
+        assertEquals(
+                "io.sindri.tests.fixtures.event.TestEventFixture.Inner",
+                result.listenerData().get("nested").eventId());
+    }
+
+    @Test
+    void readFile_eventClassTheProviderQualifiesItself_isLeftAsItIsRead() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath(
+                                "Event/Provider/TestNestedEventIdListenerProviderFixture.java"));
+
+        assertEquals("java.lang.String", result.listenerData().get("already.qualified").eventId());
     }
 
     @Test
@@ -107,6 +133,16 @@ public final class ListenerProviderReaderTest {
                         .contains(
                                 "io.sindri.tests.fixtures.event.provider"
                                         + ".TestSamePackageListenerProviderFixture::handle"));
+    }
+
+    @Test
+    void readFile_arrayEventClass_throws() {
+        assertThrows(
+                UnreadableListenerException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath(
+                                        "Event/Provider/TestArrayEventIdListenerProviderFixture.java")));
     }
 
     @Test
@@ -152,15 +188,6 @@ public final class ListenerProviderReaderTest {
     }
 
     @Test
-    void readFile_providerInTheDefaultPackage_isRead() {
-        ListenerProviderResult result =
-                reader.readFile(
-                        fixturePath("Event/Provider/TestNoPackageListenerProviderFixture.java"));
-
-        assertTrue(result.listeners().containsKey("user.created"));
-    }
-
-    @Test
     void readFile_chainedListener_isKeyedByTheNameTheChainApplies() {
         ListenerProviderResult result =
                 reader.readFile(
@@ -185,7 +212,68 @@ public final class ListenerProviderReaderTest {
                 reader.readFile(
                         fixturePath("Event/Provider/TestChainedListenerProviderFixture.java"));
 
-        assertEquals(2, result.listeners().size());
+        assertEquals(4, result.listeners().size());
+    }
+
+    @Test
+    void readFile_indexesEachListenerUnderTheEventItsConstructionNames() {
+        ListenerProviderResult result =
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderFixture.java"));
+
+        assertEquals(
+                "io.sindri.tests.fixtures.event.TestEventFixture",
+                result.listenerData().get("user.created").eventId());
+    }
+
+    @Test
+    void readFile_chainedEventId_replacesTheConstructions() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath("Event/Provider/TestChainedListenerProviderFixture.java"));
+
+        assertEquals(
+                "io.sindri.tests.fixtures.event.TestOtherEventFixture",
+                result.listenerData().get("rebound").eventId());
+    }
+
+    @Test
+    void readFile_chainThatReboundsTwice_takesTheOutermostEventId() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath("Event/Provider/TestChainedListenerProviderFixture.java"));
+
+        assertEquals(
+                "io.sindri.tests.fixtures.event.TestOtherEventFixture",
+                result.listenerData().get("rebound.twice").eventId());
+    }
+
+    @Test
+    void readFile_providerInTheDefaultPackage_isRead() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath("Event/Provider/TestNoPackageListenerProviderFixture.java"));
+
+        assertTrue(result.listeners().containsKey("user.created"));
+    }
+
+    @Test
+    void readFile_noEventIdArgument_throws() {
+        assertThrows(
+                UnreadableListenerException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath(
+                                        "Event/Provider/TestNoEventIdListenerProviderFixture.java")));
+    }
+
+    @Test
+    void readFile_nonClassEventId_throws() {
+        assertThrows(
+                UnreadableListenerException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath(
+                                        "Event/Provider/TestNonClassEventIdListenerProviderFixture.java")));
     }
 
     @Test

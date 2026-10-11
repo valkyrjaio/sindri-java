@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.javaparser.ast.expr.NameExpr;
+import io.sindri.ast.data.ListenerData;
 import io.sindri.ast.data.result.ListenerProviderResult;
 import java.util.List;
 import java.util.Map;
@@ -23,18 +24,19 @@ final class ListenerProviderResultTest {
     @Test
     void noArgConstructorIsEmpty() {
         assertTrue(new ListenerProviderResult().listenerClasses().isEmpty());
-        assertTrue(new ListenerProviderResult().listeners().isEmpty());
+        assertTrue(new ListenerProviderResult().listenerData().isEmpty());
     }
 
     @Test
     void mergeUnionsClassesAndListeners() {
         var a = result("A", "x");
-        var b = new ListenerProviderResult(List.of("A", "B"), Map.of());
+        var b = new ListenerProviderResult(List.of("A", "B"), Map.of(), Map.of());
 
         var merged = a.merge(b);
 
         assertEquals(List.of("A", "B"), merged.listenerClasses());
         assertEquals(1, merged.listeners().size());
+        assertEquals(1, merged.listenerData().size());
     }
 
     @Test
@@ -45,9 +47,13 @@ final class ListenerProviderResultTest {
         var merged = a.merge(b);
 
         assertEquals("B", merged.listeners().get("x").toString());
+        assertEquals("B", merged.listenerData().get("x").eventId());
     }
 
     private static ListenerProviderResult result(String eventId, String name) {
-        return new ListenerProviderResult(List.of(eventId), Map.of(name, new NameExpr(eventId)));
+        return new ListenerProviderResult(
+                List.of(eventId),
+                Map.of(name, new NameExpr(eventId)),
+                Map.of(name, new ListenerData(eventId, name)));
     }
 }

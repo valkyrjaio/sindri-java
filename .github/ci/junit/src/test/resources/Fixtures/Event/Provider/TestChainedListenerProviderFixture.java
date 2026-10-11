@@ -1,6 +1,7 @@
 package io.sindri.tests.fixtures.event.provider;
 
 import io.sindri.tests.fixtures.event.TestEventFixture;
+import io.sindri.tests.fixtures.event.TestOtherEventFixture;
 import io.sindri.tests.fixtures.event.TestListenerFixture;
 import io.valkyrja.event.data.Listener;
 import io.valkyrja.event.data.contract.ListenerContract;
@@ -23,6 +24,11 @@ public final class TestChainedListenerProviderFixture implements ListenerProvide
                 .withName("last"),
             new Listener(TestEventFixture.class, "handler.only", TestListenerFixture::onUserCreated)
                 .withHandler(TestListenerFixture::onUserDeleted),
+            new Listener(TestEventFixture.class, "rebound", TestListenerFixture::onUserCreated)
+                .withEventId(TestOtherEventFixture.class),
+            new Listener(TestEventFixture.class, "rebound.twice", TestListenerFixture::onUserCreated)
+                .withEventId(TestEventFixture.class)
+                .withEventId(TestOtherEventFixture.class),
             makeListener()
         );
     }

@@ -10,11 +10,16 @@ package io.sindri.generator.event.contract;
 
 import io.sindri.generator.enum_.GenerateStatus;
 import java.util.Map;
+import java.util.SequencedSet;
 
 public interface EventDataFileGeneratorContract {
 
     GenerateStatus generateFile(
-            String directory, String className, String namespace, Map<String, String> listeners);
+            String directory,
+            String className,
+            String namespace,
+            Map<String, String> listeners,
+            Map<String, SequencedSet<String>> events);
 
     String generateClassContents(Map<String, String> listeners);
 }
