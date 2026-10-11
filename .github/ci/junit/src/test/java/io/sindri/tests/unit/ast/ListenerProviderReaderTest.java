@@ -69,6 +69,23 @@ public final class ListenerProviderReaderTest {
     }
 
     @Test
+    void readFile_importOutranksAClassTheProvidersPackageDeclares() {
+        ListenerProviderResult result =
+                reader.readFile(fixturePath("Event/Provider/TestListenerProviderFixture.java"));
+
+        // A sibling TestEventFixture.java sits beside the provider, and the provider imports
+        // io.sindri.tests.fixtures.event.TestEventFixture, which is the one Java resolves.
+        assertEquals(
+                "io.sindri.tests.fixtures.event.TestEventFixture",
+                result.listenerData().get("user.created").eventId());
+        assertTrue(
+                result.listeners()
+                        .get("user.created")
+                        .toString()
+                        .contains("io.sindri.tests.fixtures.event.TestEventFixture.class"));
+    }
+
+    @Test
     void readFile_leavesANameItCannotResolveAsItIsRead() {
         ListenerProviderResult result =
                 reader.readFile(

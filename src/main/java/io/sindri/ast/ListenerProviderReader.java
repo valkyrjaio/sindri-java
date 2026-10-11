@@ -70,10 +70,10 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
         }
 
         // An inlined listener is written into a data file in another package, so every name in it
-        // has to be fully qualified. A class the provider's own package declares carries no
-        // import, so the map takes each of those too, from the provider's own directory.
-        Map<String, String> qualifyMap = new HashMap<>(importMap);
-        qualifyMap.putAll(getPackageClasses(filePath, pkg));
+        // has to be fully qualified. An import outranks a class the provider's own package
+        // declares, the way the compiler resolves a name.
+        Map<String, String> qualifyMap = new HashMap<>(getPackageClasses(filePath, pkg));
+        qualifyMap.putAll(importMap);
 
         List<String> listenerClasses = new ArrayList<>();
         Map<String, Expression> listeners = new LinkedHashMap<>();
