@@ -13,6 +13,7 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import io.sindri.ast.abstract_.AstReader;
 import io.sindri.ast.contract.ListenerProviderReaderContract;
 import io.sindri.ast.data.result.ListenerProviderResult;
@@ -28,9 +29,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class ListenerProviderReader extends AstReader implements ListenerProviderReaderContract {
+
+    /**
+     * The builder calls this reader understands. A call outside this set can change the name the
+     * listener registers under, and the cache must match what the runtime collector receives, so
+     * an unknown call is a read failure rather than a listener cached under a guessed name.
+     */
+    private static final Set<String> CHAINED_CALLS = Set.of("withName", "withHandler");
 
     /** The extension a Java source file carries. */
     private static final String JAVA_SUFFIX = ".java";
@@ -65,12 +74,14 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
         List<String> listenerClasses = new ArrayList<>();
         Map<String, Expression> listeners = new LinkedHashMap<>();
         for (Expression item : extractListOfItems(returnExpr)) {
-            if (item.isObjectCreationExpr()) {
-                String fqn = extractObjectCreationFqn(item, qualifyMap, pkg);
+            List<MethodCallExpr> chain = getChainedCalls(item);
+            Expression base = chain.isEmpty() ? item : chain.getLast().getScope().orElseThrow();
+            if (base.isObjectCreationExpr()) {
+                String fqn = extractObjectCreationFqn(base, qualifyMap, pkg);
                 if (!fqn.isEmpty()) {
                     listenerClasses.add(fqn);
                 }
-                listeners.put(readName(item), qualify(item, qualifyMap));
+                listeners.put(readName(item, base, chain), qualify(item, qualifyMap));
             }
         }
         return new ListenerProviderResult(listenerClasses, listeners);
@@ -117,16 +128,64 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
     }
 
     /**
-     * Read the name a listener registers under, which is its construction's second argument.
+     * Collect the calls a builder chain makes, from the outermost call inward.
      *
-     * @param listener the listener construction
+     * @param listener the listener expression
+     * @return the chain's calls, empty when the expression is not a chain
+     */
+    private List<MethodCallExpr> getChainedCalls(Expression listener) {
+        List<MethodCallExpr> calls = new ArrayList<>();
+        Expression current = listener;
+
+        while (current.isMethodCallExpr() && current.asMethodCallExpr().getScope().isPresent()) {
+            MethodCallExpr call = current.asMethodCallExpr();
+            calls.add(call);
+            current = call.getScope().orElseThrow();
+        }
+
+        return calls;
+    }
+
+    /**
+     * Read the name a listener registers under: its construction's second argument, or the name a
+     * call in the builder chain over that construction replaces it with.
+     *
+     * @param listener the listener expression
+     * @param base the construction at the base of the listener expression
+     * @param chain the builder chain over that construction, outermost call first
      * @return the listener name
      */
-    private String readName(Expression listener) {
-        NodeList<Expression> arguments = listener.asObjectCreationExpr().getArguments();
+    private String readName(Expression listener, Expression base, List<MethodCallExpr> chain) {
+        for (MethodCallExpr call : chain) {
+            String called = call.getNameAsString();
 
-        if (arguments.size() > 1 && arguments.get(1).isStringLiteralExpr()) {
-            return arguments.get(1).asStringLiteralExpr().asString();
+            if (!CHAINED_CALLS.contains(called)) {
+                throw new UnreadableListenerException(
+                        "Could not read the listener through " + called + "(): " + listener);
+            }
+
+            // The framework applies the outermost call last, so the first withName this walk
+            // reaches holds the name every call under it replaces.
+            if (called.equals("withName")) {
+                return readNameArgument(call.getArguments(), 0, listener);
+            }
+        }
+
+        return readNameArgument(base.asObjectCreationExpr().getArguments(), 1, listener);
+    }
+
+    /**
+     * Read a string literal argument's value.
+     *
+     * @param arguments the argument list to read from
+     * @param index the argument's position
+     * @param listener the listener expression, for the failure message
+     * @return the literal's value
+     */
+    private String readNameArgument(
+            NodeList<Expression> arguments, int index, Expression listener) {
+        if (index < arguments.size() && arguments.get(index).isStringLiteralExpr()) {
+            return arguments.get(index).asStringLiteralExpr().asString();
         }
 
         throw new UnreadableListenerException(

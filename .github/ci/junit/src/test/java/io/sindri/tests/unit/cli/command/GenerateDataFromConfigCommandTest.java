@@ -163,7 +163,10 @@ final class GenerateDataFromConfigCommandTest {
                     }
 
                     public List<Object> getListeners() {
-                        return List.of(new Listener(AppEvent.class, "app.event", AppListener::on));
+                        return List.of(
+                                new Listener(AppEvent.class, "app.event", AppListener::on),
+                                new Listener(AppEvent.class, "app.chained", AppListener::on)
+                                        .withName("app.renamed"));
                     }
                 }
                 """);
@@ -625,6 +628,13 @@ final class GenerateDataFromConfigCommandTest {
                         "\"app.event\", new io.valkyrja.event.data.Listener(app.AppEvent.class,"
                                 + " \"app.event\", app.AppListener::on)"),
                 () -> "provider listener not keyed by its name, or not qualified:\n" + event);
+        // A builder chain is keyed by the name the chain applies, not the construction's name.
+        assertTrue(
+                event.contains(
+                        "\"app.renamed\", new io.valkyrja.event.data.Listener(app.AppEvent.class,"
+                                + " \"app.chained\", app.AppListener::on)"
+                                + ".withName(\"app.renamed\")"),
+                () -> "chained provider listener missing:\n" + event);
         // sindri reads no listener annotation, because the framework declares none and its
         // collection has no attribute collector, so the cached and the uncached path agree on
         // collecting nothing from AppListener.

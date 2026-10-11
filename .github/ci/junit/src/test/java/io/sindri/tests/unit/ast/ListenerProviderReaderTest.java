@@ -161,6 +161,54 @@ public final class ListenerProviderReaderTest {
     }
 
     @Test
+    void readFile_chainedListener_isKeyedByTheNameTheChainApplies() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath("Event/Provider/TestChainedListenerProviderFixture.java"));
+
+        assertTrue(result.listeners().containsKey("last"));
+        assertTrue(result.listeners().get("last").toString().contains(".withName(\"last\")"));
+    }
+
+    @Test
+    void readFile_chainThatKeepsTheName_isKeyedByTheConstructionsName() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath("Event/Provider/TestChainedListenerProviderFixture.java"));
+
+        assertTrue(result.listeners().containsKey("handler.only"));
+    }
+
+    @Test
+    void readFile_itemWithNoConstructionToReadFrom_isSkipped() {
+        ListenerProviderResult result =
+                reader.readFile(
+                        fixturePath("Event/Provider/TestChainedListenerProviderFixture.java"));
+
+        assertEquals(2, result.listeners().size());
+    }
+
+    @Test
+    void readFile_chainCallItCannotRead_throws() {
+        assertThrows(
+                UnreadableListenerException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath(
+                                        "Event/Provider/TestUnknownChainListenerProviderFixture.java")));
+    }
+
+    @Test
+    void readFile_nonLiteralChainedName_throws() {
+        assertThrows(
+                UnreadableListenerException.class,
+                () ->
+                        reader.readFile(
+                                fixturePath(
+                                        "Event/Provider/TestNonLiteralChainNameListenerProviderFixture.java")));
+    }
+
+    @Test
     void readFile_nonLiteralName_throws() {
         assertThrows(
                 UnreadableListenerException.class,
