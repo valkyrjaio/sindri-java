@@ -20,7 +20,9 @@ import com.github.javaparser.ast.body.RecordDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import io.sindri.ast.throwable.exception.AstFileReadException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -115,6 +117,37 @@ public abstract class AstReader {
         }
         String typeName = expr.asClassExpr().getTypeAsString();
         return resolveClassName(typeName, importMap, pkg);
+    }
+
+    /**
+     * Fully qualify every simple type/name reference in an expression against the file's import
+     * map, so the result is self-contained when inlined into a generated file with different
+     * imports.
+     *
+     * @param expr the expression to qualify
+     * @param importMap the reading file's simple name to fully qualified name map
+     * @return a qualified clone of the expression
+     */
+    protected Expression qualify(Expression expr, Map<String, String> importMap) {
+        Expression clone = expr.clone();
+
+        for (NameExpr name : clone.findAll(NameExpr.class)) {
+            String fqn = importMap.get(name.getNameAsString());
+            if (fqn != null) {
+                name.replace(StaticJavaParser.parseExpression(fqn));
+            }
+        }
+
+        for (ClassOrInterfaceType simpleType : clone.findAll(ClassOrInterfaceType.class)) {
+            if (simpleType.getScope().isEmpty()) {
+                String fqn = importMap.get(simpleType.getNameAsString());
+                if (fqn != null) {
+                    simpleType.replace(StaticJavaParser.parseClassOrInterfaceType(fqn));
+                }
+            }
+        }
+
+        return clone;
     }
 
     protected List<Expression> extractListOfItems(Expression expr) {

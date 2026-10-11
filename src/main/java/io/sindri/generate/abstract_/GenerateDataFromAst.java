@@ -223,7 +223,7 @@ public abstract class GenerateDataFromAst {
             listenerProviderReader
                     .readFile(filePath)
                     .listeners()
-                    .forEach(expr -> listeners.put(expr.toString(), expr.toString()));
+                    .forEach((name, expr) -> listeners.put(name, expr.toString()));
         }
         return listeners;
     }

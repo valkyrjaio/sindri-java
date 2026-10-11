@@ -170,6 +170,31 @@ final class GenerateDataFromConfigCommandTest {
 
         writeFixture(
                 appDir,
+                "AppEvent.java",
+                """
+                package app;
+
+                public final class AppEvent {}
+                """);
+
+        writeFixture(
+                appDir,
+                "AppListener.java",
+                """
+                package app;
+
+                import io.valkyrja.event.attribute.Listener;
+
+                public class AppListener {
+                    @Listener(eventId = AppEvent.class, name = "app.annotated")
+                    public static Object on(Object container, Object arguments) {
+                        return null;
+                    }
+                }
+                """);
+
+        writeFixture(
+                appDir,
                 "AppCliRouteProvider.java",
                 """
                 package app;
@@ -577,6 +602,36 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 container.contains("app.AppServiceProvider::publishAppService"),
                 () -> "app service publisher missing from callbacks:\n" + container);
+    }
+
+    @Test
+    void generatesExpectedEventContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String event = Files.readString(appDir.resolve("data").resolve("AppEventData.java"));
+
+        // The listener is keyed by its name, the key the runtime ListenerCollection uses, and
+        // every name in it is fully qualified, including AppEvent and AppListener, which the
+        // provider's own package declares and so carries no import for.
+        assertTrue(
+                event.contains(
+                        "\"app.event\", new io.valkyrja.event.data.Listener(app.AppEvent.class,"
+                                + " \"app.event\", app.AppListener::on)"),
+                () -> "provider listener not keyed by its name, or not qualified:\n" + event);
+        // sindri reads no listener annotation, because the framework declares none and its
+        // collection has no attribute collector, so the cached and the uncached path agree on
+        // collecting nothing from AppListener.
+        assertFalse(
+                event.contains("app.annotated"),
+                () -> "an annotated listener reached the cache:\n" + event);
+        assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(event));
     }
 
     @Test
