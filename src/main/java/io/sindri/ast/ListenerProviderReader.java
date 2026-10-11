@@ -36,12 +36,7 @@ import org.jspecify.annotations.Nullable;
 
 public class ListenerProviderReader extends AstReader implements ListenerProviderReaderContract {
 
-    /**
-     * The builder calls this reader understands. A call outside this set can change the name the
-     * listener registers under, or the event it listens for, and the cache must match what the
-     * runtime collector receives, so an unknown call is a read failure rather than a listener
-     * cached under a guessed name.
-     */
+    /** The builder calls this reader understands, each of which it reads rather than guesses. */
     private static final Set<String> CHAINED_CALLS =
             Set.of("withEventId", "withName", "withHandler");
 
@@ -69,9 +64,7 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
             return new ListenerProviderResult();
         }
 
-        // An inlined listener is written into a data file in another package, so every name in it
-        // has to be fully qualified. An import outranks a class the provider's own package
-        // declares, the way the compiler resolves a name.
+        // An import outranks a class the package declares, the way the compiler resolves a name.
         Map<String, String> qualifyMap = new HashMap<>(getPackageClasses(filePath, pkg));
         qualifyMap.putAll(importMap);
 
@@ -95,9 +88,7 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
     }
 
     /**
-     * Map each class the reading file's own package declares to its fully qualified name. A sibling
-     * source file is the only way to tell a same-package class from one the compiler resolves
-     * elsewhere, such as {@code String}, which must be left as it is read.
+     * Map each class the reading file's own package declares to its fully qualified name.
      *
      * @param filePath the file being read
      * @param pkg the file's package
@@ -154,9 +145,7 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
     }
 
     /**
-     * Read the event a listener listens for and the name it registers under. Each one comes from
-     * the construction's arguments, or from the builder chain over that construction when a call in
-     * the chain replaces it.
+     * Read the event a listener listens for and the name it registers under.
      *
      * @param listener the listener expression
      * @param base the construction at the base of the listener expression
@@ -180,8 +169,7 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
                         "Could not read the listener through " + called + "(): " + listener);
             }
 
-            // The framework applies the outermost call last, so the first withEventId and the
-            // first withName this walk reaches hold the values every call under them replaces.
+            // The framework applies the outermost call last, so the first of each wins.
             if (eventIdArgument == null && called.equals("withEventId")) {
                 eventIdArgument = getArgument(call.getArguments(), 0);
             }
@@ -217,21 +205,20 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
     }
 
     /**
-     * Resolve the event class a {@code .class} argument names, against the imports and the classes
-     * the provider's own package declares. A name neither of those knows stays as it is read,
-     * because the inlined listener keeps that name too and the two have to name one class.
+     * Resolve the event class a {@code .class} argument names.
      *
      * @param argument the argument naming the event class
      * @param typeMap the simple name to fully qualified name map for the provider
      * @return the event class name, or an empty string when the argument names no event class
      */
     private String resolveEventId(Expression argument, Map<String, String> typeMap) {
-        // An array type and a primitive type name no event, and the inlined listener qualifies an
-        // array's component type, which the index cannot follow.
+        // An array type and a primitive type name no event.
         if (!argument.isClassExpr() || !argument.asClassExpr().getType().isClassOrInterfaceType()) {
             return "";
         }
 
+        // A name the map does not know stays as it is read, so the index and the inlined
+        // listener name one class.
         String typeName = argument.asClassExpr().getTypeAsString();
         int nested = typeName.indexOf('.');
         String outer = nested < 0 ? typeName : typeName.substring(0, nested);

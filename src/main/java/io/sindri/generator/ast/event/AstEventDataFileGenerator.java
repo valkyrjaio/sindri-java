@@ -80,11 +80,7 @@ public class AstEventDataFileGenerator extends AstFileGenerator
         return buildListenersBody(listeners);
     }
 
-    /**
-     * Render an {@code events()} method body from an event class to listener names index. The
-     * runtime collection indexes a listener's name under its event class, and a cached listener the
-     * index leaves out never fires.
-     */
+    /** Render an {@code events()} method body from an event class to listener names index. */
     protected String buildEventsBody(Map<String, SequencedSet<String>> events) {
         List<String> entries = new ArrayList<>();
 
@@ -103,12 +99,7 @@ public class AstEventDataFileGenerator extends AstFileGenerator
         return buildMapBody(entries);
     }
 
-    /**
-     * Render the inline name to name map the runtime collection holds for one event class. The map
-     * preserves the order the listeners were registered in, because the dispatcher runs them in
-     * iteration order and a stoppable event lets an earlier listener stop a later one. {@code
-     * Map.of} cannot carry that order: its iteration order is salted per run.
-     */
+    /** Render the ordered name to name map the runtime collection holds for one event class. */
     private String buildListenerIdsMap(SequencedSet<String> listenerIds) {
         if (listenerIds.isEmpty()) {
             return "Map.of()";
@@ -127,10 +118,7 @@ public class AstEventDataFileGenerator extends AstFileGenerator
                 + " java.util.LinkedHashMap::new))";
     }
 
-    /**
-     * Escape a value for a Java string literal, so a name holding a quote, a backslash or a line
-     * break cannot end the literal the generated file wraps it in.
-     */
+    /** Escape a value for a Java string literal. */
     private String escape(String value) {
         StringBuilder escaped = new StringBuilder();
 
@@ -142,9 +130,10 @@ public class AstEventDataFileGenerator extends AstFileGenerator
     }
 
     /**
-     * Escape one character for a Java string literal. A control character takes a named or an octal
-     * escape, never a {@code \\u} escape: the compiler reads a unicode escape before it reads the
-     * literal, so {@code \\u000a} ends the line it sits on.
+     * Escape one character for a Java string literal.
+     *
+     * <p>A control character takes an octal escape, never a {@code \\u} escape, because the
+     * compiler resolves a unicode escape before it reads the literal.
      */
     private String escapeCharacter(char character) {
         return switch (character) {
@@ -163,9 +152,7 @@ public class AstEventDataFileGenerator extends AstFileGenerator
     }
 
     /**
-     * Render a {@code return} statement for a map literal from already-rendered {@code key, value}
-     * entries: an inline {@code Map.of(...)} for up to ten entries, or {@code Map.ofEntries(...)}
-     * beyond.
+     * Render a {@code return} statement for a map literal from rendered {@code key, value} entries.
      */
     private String buildMapBody(List<String> entries) {
         if (entries.isEmpty()) {
