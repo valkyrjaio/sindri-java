@@ -99,7 +99,10 @@ public class AstEventDataFileGenerator extends AstFileGenerator
         return buildMapBody(entries);
     }
 
-    /** Render the ordered name to name map the runtime collection holds for one event class. */
+    /**
+     * Render the name to name map the runtime collection holds for one event class. The dispatcher
+     * runs the listeners in iteration order, so the map keeps it.
+     */
     private String buildListenerIdsMap(SequencedSet<String> listenerIds) {
         if (listenerIds.isEmpty()) {
             return "Map.of()";

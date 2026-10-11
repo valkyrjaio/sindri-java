@@ -36,7 +36,7 @@ import org.jspecify.annotations.Nullable;
 
 public class ListenerProviderReader extends AstReader implements ListenerProviderReaderContract {
 
-    /** The builder calls this reader understands, each of which it reads rather than guesses. */
+    /** The builder calls this reader reads. A call outside this set can change what it keys on. */
     private static final Set<String> CHAINED_CALLS =
             Set.of("withEventId", "withName", "withHandler");
 
@@ -212,7 +212,7 @@ public class ListenerProviderReader extends AstReader implements ListenerProvide
      * @return the event class name, or an empty string when the argument names no event class
      */
     private String resolveEventId(Expression argument, Map<String, String> typeMap) {
-        // An array type and a primitive type name no event.
+        // An argument that is not a class, an array type and a primitive type name no event.
         if (!argument.isClassExpr() || !argument.asClassExpr().getType().isClassOrInterfaceType()) {
             return "";
         }
