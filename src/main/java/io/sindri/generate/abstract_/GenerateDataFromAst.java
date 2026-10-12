@@ -25,6 +25,7 @@ import io.sindri.ast.data.result.ComponentProviderResult;
 import io.sindri.ast.data.result.ConfigResult;
 import io.sindri.ast.data.result.GrpcRouteAttributeResult;
 import io.sindri.ast.data.result.HttpRouteAttributeResult;
+import io.sindri.ast.data.result.ListenerProviderResult;
 import io.sindri.ast.data.result.RouteProviderResult;
 import io.sindri.generator.cli.contract.CliDataFileGeneratorContract;
 import io.sindri.generator.container.contract.ContainerDataFileGeneratorContract;
@@ -34,7 +35,9 @@ import io.sindri.generator.grpc.contract.GrpcDataFileGeneratorContract;
 import io.sindri.generator.http.contract.HttpDataFileGeneratorContract;
 import io.sindri.generator.throwable.exception.DataFileWriteException;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.SequencedSet;
 
 public abstract class GenerateDataFromAst {
 
@@ -88,8 +91,9 @@ public abstract class GenerateDataFromAst {
         Map<String, String[]> publishers =
                 collectPublishers(allProviderData.serviceProviders(), config);
 
-        Map<String, String> listeners =
-                collectListeners(allProviderData.listenerProviders(), config);
+        Map<String, String> listeners = new LinkedHashMap<>();
+        Map<String, SequencedSet<String>> events = new LinkedHashMap<>();
+        collectListeners(allProviderData.listenerProviders(), config, listeners, events);
 
         Map<String, String> cliRoutes =
                 collectCliRoutes(allProviderData.cliRouteProviders(), config);
@@ -112,7 +116,7 @@ public abstract class GenerateDataFromAst {
         requireWritten(
                 "AppEventData",
                 getEventDataFileGenerator()
-                        .generateFile(dataDir, "AppEventData", dataNamespace, listeners));
+                        .generateFile(dataDir, "AppEventData", dataNamespace, listeners, events));
         requireWritten(
                 "AppCliRoutingData",
                 getCliDataFileGenerator()
@@ -212,20 +216,35 @@ public abstract class GenerateDataFromAst {
         return publishers;
     }
 
-    private Map<String, String> collectListeners(
-            java.util.List<String> listenerProviders, ConfigResult config) {
-        Map<String, String> listeners = new LinkedHashMap<>();
+    /**
+     * Collect every provider-declared listener, keyed by the name the runtime collection keys it
+     * by, and the event index that collection reads to find a listener for an event.
+     *
+     * @param listenerProviders the listener provider classes to read
+     * @param config the generation config
+     * @param listeners the listener name to listener expression map to fill
+     * @param events the event class to listener names index to fill
+     */
+    private void collectListeners(
+            java.util.List<String> listenerProviders,
+            ConfigResult config,
+            Map<String, String> listeners,
+            Map<String, SequencedSet<String>> events) {
         for (String providerFqn : listenerProviders) {
             String filePath = fqnToFilePath(providerFqn, config.namespace(), config.dir());
             if (filePath.isEmpty()) {
                 continue;
             }
-            listenerProviderReader
-                    .readFile(filePath)
-                    .listeners()
-                    .forEach(expr -> listeners.put(expr.toString(), expr.toString()));
+            ListenerProviderResult result = listenerProviderReader.readFile(filePath);
+            result.listeners().forEach((name, expr) -> listeners.put(name, expr.toString()));
+            result.listenerData()
+                    .forEach(
+                            (name, data) ->
+                                    events.computeIfAbsent(
+                                                    data.eventId(),
+                                                    eventId -> new LinkedHashSet<>())
+                                            .add(name));
         }
-        return listeners;
     }
 
     private Map<String, String> collectCliRoutes(

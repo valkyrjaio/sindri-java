@@ -8,13 +8,10 @@
 
 package io.sindri.ast;
 
-import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import io.sindri.ast.abstract_.AstReader;
 import io.sindri.ast.contract.RouteProviderReaderContract;
 import io.sindri.ast.data.result.RouteProviderResult;
@@ -99,32 +96,5 @@ public class RouteProviderReader extends AstReader implements RouteProviderReade
         }
 
         return current;
-    }
-
-    /**
-     * Fully qualify every simple type/name reference in an expression against the file's import
-     * map, so the result is self-contained when inlined into a generated file with different
-     * imports.
-     */
-    protected Expression qualify(Expression expr, Map<String, String> importMap) {
-        Expression clone = expr.clone();
-
-        for (NameExpr name : clone.findAll(NameExpr.class)) {
-            String fqn = importMap.get(name.getNameAsString());
-            if (fqn != null) {
-                name.replace(StaticJavaParser.parseExpression(fqn));
-            }
-        }
-
-        for (ClassOrInterfaceType simpleType : clone.findAll(ClassOrInterfaceType.class)) {
-            if (simpleType.getScope().isEmpty()) {
-                String fqn = importMap.get(simpleType.getNameAsString());
-                if (fqn != null) {
-                    simpleType.replace(StaticJavaParser.parseClassOrInterfaceType(fqn));
-                }
-            }
-        }
-
-        return clone;
     }
 }

@@ -163,7 +163,35 @@ final class GenerateDataFromConfigCommandTest {
                     }
 
                     public List<Object> getListeners() {
-                        return List.of(new Listener(AppEvent.class, "app.event", AppListener::on));
+                        return List.of(
+                                new Listener(AppEvent.class, "app.event", AppListener::on),
+                                new Listener(AppEvent.class, "app.chained", AppListener::on)
+                                        .withName("app.renamed"));
+                    }
+                }
+                """);
+
+        writeFixture(
+                appDir,
+                "AppEvent.java",
+                """
+                package app;
+
+                public final class AppEvent {}
+                """);
+
+        writeFixture(
+                appDir,
+                "AppListener.java",
+                """
+                package app;
+
+                import io.valkyrja.event.attribute.Listener;
+
+                public class AppListener {
+                    @Listener(eventId = AppEvent.class, name = "app.annotated")
+                    public static Object on(Object container, Object arguments) {
+                        return null;
                     }
                 }
                 """);
@@ -577,6 +605,51 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 container.contains("app.AppServiceProvider::publishAppService"),
                 () -> "app service publisher missing from callbacks:\n" + container);
+    }
+
+    @Test
+    void generatesExpectedEventContent(@TempDir Path tmp) throws IOException {
+        Path appDir = writeApp(tmp);
+        var original = System.out;
+        System.setOut(new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8));
+        try {
+            command(appDir.resolve("AppConfig.java").toString()).execute();
+        } finally {
+            System.setOut(original);
+        }
+
+        String event = Files.readString(appDir.resolve("data").resolve("AppEventData.java"));
+
+        // The listener is keyed by its name, the key the runtime ListenerCollection uses, and
+        // every name in it is fully qualified, including AppEvent and AppListener, which the
+        // provider's own package declares and so carries no import for.
+        assertTrue(
+                event.contains(
+                        "\"app.event\", new io.valkyrja.event.data.Listener(app.AppEvent.class,"
+                                + " \"app.event\", app.AppListener::on)"),
+                () -> "provider listener not keyed by its name, or not qualified:\n" + event);
+        // A builder chain is keyed by the name the chain applies, not the construction's name.
+        assertTrue(
+                event.contains(
+                        "\"app.renamed\", new io.valkyrja.event.data.Listener(app.AppEvent.class,"
+                                + " \"app.chained\", app.AppListener::on)"
+                                + ".withName(\"app.renamed\")"),
+                () -> "chained provider listener missing:\n" + event);
+        // Both listeners are indexed under their event class in the order the provider declares
+        // them, which is the order the dispatcher runs them in.
+        assertTrue(
+                event.contains(
+                        "app.AppEvent.class, java.util.stream.Stream.of(\"app.event\","
+                                + " \"app.renamed\").collect("),
+                () -> "event index missing, or not in declaration order:\n" + event);
+        // The index above names every listener it holds, so an annotated listener for the same
+        // event would fail that assertion whatever name it carried. sindri reads no listener
+        // annotation, because the framework declares none and its collection has no attribute
+        // collector, so the cached and the uncached path agree on collecting nothing.
+        assertFalse(
+                event.contains("app.annotated"),
+                () -> "an annotated listener reached the cache:\n" + event);
+        assertDoesNotThrow(() -> com.github.javaparser.StaticJavaParser.parse(event));
     }
 
     @Test

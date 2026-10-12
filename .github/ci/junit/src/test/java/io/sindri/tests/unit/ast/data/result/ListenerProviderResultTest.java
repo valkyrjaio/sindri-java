@@ -12,8 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.javaparser.ast.expr.NameExpr;
+import io.sindri.ast.data.ListenerData;
 import io.sindri.ast.data.result.ListenerProviderResult;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Test the {@link ListenerProviderResult}. */
@@ -22,16 +24,36 @@ final class ListenerProviderResultTest {
     @Test
     void noArgConstructorIsEmpty() {
         assertTrue(new ListenerProviderResult().listenerClasses().isEmpty());
+        assertTrue(new ListenerProviderResult().listenerData().isEmpty());
     }
 
     @Test
-    void mergeUnionsClassesAndConcatenatesListeners() {
-        var a = new ListenerProviderResult(List.of("A"), List.of(new NameExpr("x")));
-        var b = new ListenerProviderResult(List.of("A", "B"), List.of(new NameExpr("y")));
+    void mergeUnionsClassesAndListeners() {
+        var a = result("A", "x");
+        var b = new ListenerProviderResult(List.of("A", "B"), Map.of(), Map.of());
 
         var merged = a.merge(b);
 
         assertEquals(List.of("A", "B"), merged.listenerClasses());
-        assertEquals(2, merged.listeners().size());
+        assertEquals(1, merged.listeners().size());
+        assertEquals(1, merged.listenerData().size());
+    }
+
+    @Test
+    void mergeKeepsTheLastListenerRegisteredUnderAName() {
+        var a = result("A", "x");
+        var b = result("B", "x");
+
+        var merged = a.merge(b);
+
+        assertEquals("B", merged.listeners().get("x").toString());
+        assertEquals("B", merged.listenerData().get("x").eventId());
+    }
+
+    private static ListenerProviderResult result(String eventId, String name) {
+        return new ListenerProviderResult(
+                List.of(eventId),
+                Map.of(name, new NameExpr(eventId)),
+                Map.of(name, new ListenerData(eventId, name)));
     }
 }

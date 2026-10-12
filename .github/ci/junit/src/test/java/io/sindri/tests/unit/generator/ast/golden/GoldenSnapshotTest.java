@@ -27,8 +27,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.SequencedSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -108,12 +110,33 @@ final class GoldenSnapshotTest {
 
     @Test
     void eventDataMatchesGolden(@TempDir Path dir) throws IOException {
+        // A listener value is a Listener construction, the only shape the reader emits.
+        // ListenerContract declares six methods, so a method reference cannot satisfy it and a
+        // golden built from one would pin a shape no generated cache can hold.
         Map<String, String> listeners = new LinkedHashMap<>();
-        listeners.put("user.created", "fixtures.handler.UserHandler::onCreate");
-        listeners.put("user.deleted", "fixtures.handler.UserHandler::onDelete");
+        listeners.put(
+                "user.created",
+                "new io.valkyrja.event.data.Listener(fixtures.event.UserCreated.class,"
+                        + " \"user.created\", fixtures.handler.UserHandler::onCreate)");
+        listeners.put(
+                "user.audited",
+                "new io.valkyrja.event.data.Listener(fixtures.event.UserCreated.class,"
+                        + " \"user.audited\", fixtures.handler.AuditHandler::onCreate)");
+        listeners.put(
+                "user.deleted",
+                "new io.valkyrja.event.data.Listener(fixtures.event.UserDeleted.class,"
+                        + " \"user.deleted\", fixtures.handler.UserHandler::onDelete)");
+
+        // UserCreated carries two listeners, so the golden pins the order the dispatcher runs
+        // them in.
+        Map<String, SequencedSet<String>> events = new LinkedHashMap<>();
+        events.put(
+                "fixtures.event.UserCreated",
+                new LinkedHashSet<>(List.of("user.created", "user.audited")));
+        events.put("fixtures.event.UserDeleted", new LinkedHashSet<>(List.of("user.deleted")));
 
         new AstEventDataFileGenerator()
-                .generateFile(dir.toString(), "AppEventData", PKG, listeners);
+                .generateFile(dir.toString(), "AppEventData", PKG, listeners, events);
 
         assertGolden(dir.resolve("AppEventData.java"), "AppEventData.golden");
     }

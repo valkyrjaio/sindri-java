@@ -14,14 +14,18 @@ public record AppEventData() implements EventDataContract {
 
     @Override
     public Map<Class<?>, Map<String, String>> events() {
-        return Map.of();
+        return Map.of(
+            fixtures.event.UserCreated.class, java.util.stream.Stream.of("user.created", "user.audited").collect(java.util.stream.Collectors.toMap(listenerId -> listenerId, listenerId -> listenerId, (first, second) -> first, java.util.LinkedHashMap::new)),
+            fixtures.event.UserDeleted.class, java.util.stream.Stream.of("user.deleted").collect(java.util.stream.Collectors.toMap(listenerId -> listenerId, listenerId -> listenerId, (first, second) -> first, java.util.LinkedHashMap::new))
+        );
     }
 
     @Override
     public Map<String, ListenerContract> listeners() {
         return Map.of(
-            "user.created", fixtures.handler.UserHandler::onCreate,
-            "user.deleted", fixtures.handler.UserHandler::onDelete
+            "user.created", new io.valkyrja.event.data.Listener(fixtures.event.UserCreated.class, "user.created", fixtures.handler.UserHandler::onCreate),
+            "user.audited", new io.valkyrja.event.data.Listener(fixtures.event.UserCreated.class, "user.audited", fixtures.handler.AuditHandler::onCreate),
+            "user.deleted", new io.valkyrja.event.data.Listener(fixtures.event.UserDeleted.class, "user.deleted", fixtures.handler.UserHandler::onDelete)
         );
     }
 }
