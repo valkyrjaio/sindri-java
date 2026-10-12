@@ -1,6 +1,13 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.42...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.43...26.x)
+
+## [v26.4.43](https://github.com/valkyrjaio/sindri-java/compare/v26.4.42...v26.4.43) - 2026-10-12
+
+* [Grpc] fix: Cache a gRPC route that a provider declares as a builder chain by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/193
+* [Event] fix: Generate event data that matches the runtime listener collection by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/197
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/198
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/199
 
 ## [v26.4.42](https://github.com/valkyrjaio/sindri-java/compare/v26.4.41...v26.4.42) - 2026-10-09
 
