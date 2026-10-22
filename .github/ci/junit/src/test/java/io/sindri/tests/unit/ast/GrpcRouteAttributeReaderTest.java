@@ -21,7 +21,17 @@ import org.junit.jupiter.api.Test;
 
 public final class GrpcRouteAttributeReaderTest {
 
+    private static final String MIDDLEWARE = "io.sindri.tests.fixtures.grpc.middleware.";
+
     private final GrpcRouteAttributeReader reader = new GrpcRouteAttributeReader();
+
+    /** A reader that resolves a middleware source from the given map, keyed by its class name. */
+    private GrpcRouteAttributeReader resolverReader(java.util.Map<String, String> sources) {
+        return new GrpcRouteAttributeReader(
+                fqn ->
+                        java.util.Optional.ofNullable(sources.get(fqn))
+                                .map(com.github.javaparser.StaticJavaParser::parse));
+    }
 
     private String fixturePath(String relative) {
         return getClass().getClassLoader().getResource("Fixtures/" + relative).getPath();
@@ -303,22 +313,78 @@ public final class GrpcRouteAttributeReaderTest {
     }
 
     @Test
-    void readFile_routeAttributeNamesTheMiddlewareOfEachStage() {
+    void readFile_routeAttributeNamesTheMiddlewareOfEveryStage() {
         GrpcRouteData data =
                 read("TestHandlerGrpcControllerFixture.java")
                         .routeData()
                         .get("/pkg.Handled/Member");
 
-        // An array member and a bare one are both read, and each stage keeps the attribute's own
-        // order.
+        // Every one of the five stage members is read, so a member this reader spells wrong is
+        // caught here rather than dropping that stage's middleware from the cache in silence. An
+        // array member and a bare one are both read, and each stage keeps the attribute's order.
         assertEquals(
-                java.util.List.of(
-                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
-                        "io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware"),
+                java.util.List.of(MIDDLEWARE + "AuthMiddleware", MIDDLEWARE + "MatchedMiddleware"),
                 data.routeMatchedMiddleware());
         assertEquals(
-                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware"),
-                data.responseSentMiddleware());
+                java.util.List.of(MIDDLEWARE + "DispatchedMiddleware"),
+                data.routeDispatchedMiddleware());
+        assertEquals(
+                java.util.List.of(MIDDLEWARE + "CaughtMiddleware"),
+                data.throwableCaughtMiddleware());
+        assertEquals(
+                java.util.List.of(MIDDLEWARE + "SendingMiddleware"),
+                data.sendingResponseMiddleware());
+        assertEquals(
+                java.util.List.of(MIDDLEWARE + "AuditMiddleware"), data.responseSentMiddleware());
+    }
+
+    @Test
+    void readFile_theMiddlewareAttributeAddsToTheStageTheRouteAttributeNames() {
+        // The stage member names one class and the convenience attribute names another, and a
+        // list field adds the convenience attribute's value, so the member's class comes first.
+        GrpcRouteData data =
+                resolverReader(
+                                java.util.Map.of(
+                                        MIDDLEWARE + "AuthMiddleware",
+                                        "package io.sindri.tests.fixtures.grpc.middleware;"
+                                                + " import io.valkyrja.grpc.middleware.contract.RouteMatchedMiddlewareContract;"
+                                                + " public class AuthMiddleware implements"
+                                                + " RouteMatchedMiddlewareContract {}"))
+                        .readFile(
+                                fixturePath(
+                                        "Grpc/Controller/TestHandlerGrpcControllerFixture.java"))
+                        .routeData()
+                        .get("/pkg.Handled/Combined");
+
+        assertEquals(
+                java.util.List.of(MIDDLEWARE + "MatchedMiddleware", MIDDLEWARE + "AuthMiddleware"),
+                data.routeMatchedMiddleware());
+    }
+
+    @Test
+    void readFile_resolvesANestedMessageTypeThroughTheOuterClassImport() {
+        var result = read("TestHandlerGrpcControllerFixture.java");
+        GrpcRouteData data = result.routeData().get("/pkg.Handled/Nested");
+        String supplier = result.routes().get("/pkg.Handled/Nested").toString();
+
+        // Emitting `Hello.HelloRequest` as written names a class the generated file cannot see,
+        // because it imports neither the outer class nor the nested one.
+        assertEquals(
+                "io.sindri.tests.fixtures.grpc.message.Hello.HelloRequest", data.requestType());
+        assertEquals("io.sindri.tests.fixtures.grpc.message.Hello.HelloReply", data.responseType());
+        assertTrue(
+                supplier.contains(
+                        ".withRequestType(io.sindri.tests.fixtures.grpc.message.Hello.HelloRequest.class)"));
+    }
+
+    @Test
+    void readFile_withNonLiteralHandlerMethod_throwsRatherThanCachingAGarbageHandler() {
+        RuntimeException thrown =
+                assertThrows(
+                        RuntimeException.class,
+                        () -> read("TestNonLiteralHandlerMethodGrpcControllerFixture.java"));
+        assertTrue(thrown.getMessage().contains("@RouteHandler(handlerMethod)"));
+        assertTrue(thrown.getMessage().contains("string literal"));
     }
 
     @Test
@@ -337,6 +403,7 @@ public final class GrpcRouteAttributeReaderTest {
         String supplier = result.routes().get("/pkg.Handled/Defaults").toString();
         GrpcRouteData data = result.routeData().get("/pkg.Handled/Defaults");
 
+        // `Void.class` and `java.lang.Void.class` are the same class, so both mean absent.
         assertNull(data.requestType());
         assertNull(data.responseType());
         assertFalse(supplier.contains("withRequestType"));

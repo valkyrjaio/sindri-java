@@ -84,8 +84,8 @@ public class GrpcRouteAttributeReader extends AstReader
         }
     }
 
-    /** The type an optional {@code Class<?>} member names when it is left at its default. */
-    private static final String ABSENT_TYPE = "Void";
+    /** The class an optional {@code Class<?>} member names when it is left at its default. */
+    private static final String ABSENT_CLASS = "java.lang.Void";
 
     private static final Set<String> STAGE_CONTRACTS = stageContracts();
 
@@ -336,7 +336,17 @@ public class GrpcRouteAttributeReader extends AstReader
      * @return the fully-qualified class name, or "" where the member names none
      */
     private String extractOptionalClass(Expression expr, Map<String, String> imports, String pkg) {
-        if (!expr.isClassExpr() || expr.asClassExpr().getTypeAsString().equals(ABSENT_TYPE)) {
+        if (!expr.isClassExpr()) {
+            return "";
+        }
+
+        String written = expr.asClassExpr().getTypeAsString();
+
+        // The sentinel resolves through java.lang, which a file never imports, so neither the
+        // import map nor the package resolves it. An import of a type of the same simple name
+        // shadows it, and that type is a class the member names.
+        if (!imports.containsKey(written)
+                && ("Void".equals(written) || ABSENT_CLASS.equals(written))) {
             return "";
         }
 
