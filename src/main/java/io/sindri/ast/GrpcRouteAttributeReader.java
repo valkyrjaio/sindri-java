@@ -341,12 +341,14 @@ public class GrpcRouteAttributeReader extends AstReader
         }
 
         String written = expr.asClassExpr().getTypeAsString();
+        String imported = imports.get(written);
 
-        // The sentinel resolves through java.lang, which a file never imports, so neither the
-        // import map nor the package resolves it. An import of a type of the same simple name
-        // shadows it, and that type is a class the member names.
-        if (!imports.containsKey(written)
-                && ("Void".equals(written) || ABSENT_CLASS.equals(written))) {
+        // The sentinel is a class rather than a spelling, so the qualified spelling and an
+        // import of the sentinel itself both name it. An import of another class of the same
+        // simple name shadows it, and that class is one the member names.
+        if (ABSENT_CLASS.equals(written)
+                || ("Void".equals(written)
+                        && (imported == null || ABSENT_CLASS.equals(imported)))) {
             return "";
         }
 

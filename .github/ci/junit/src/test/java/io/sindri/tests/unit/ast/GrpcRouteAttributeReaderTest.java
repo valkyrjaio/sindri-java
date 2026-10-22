@@ -401,6 +401,17 @@ public final class GrpcRouteAttributeReaderTest {
     }
 
     @Test
+    void readFile_anImportOfTheSentinelItselfStillNamesTheSentinel() {
+        // Java permits a redundant import of a java.lang class, and importing the sentinel does
+        // not turn it into a type the member names.
+        assertNull(
+                read("TestImportedVoidGrpcControllerFixture.java")
+                        .routeData()
+                        .get("/pkg.ImportedVoid/ImportedVoid")
+                        .requestType());
+    }
+
+    @Test
     void readFile_anImportOfTheSentinelsOwnNameShadowsTheSentinel() {
         // The sentinel is a class, not a spelling, so a class an application imports under the
         // same simple name is a type the member names.
