@@ -10,6 +10,7 @@ package io.sindri.tests.unit.ast;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,7 +45,7 @@ public final class GrpcRouteAttributeReaderTest {
     }
 
     @Test
-    void readFile_buildsRouteSupplierWithReflectiveHandler() {
+    void readFile_buildsRouteSupplierResolvingTheControllerFromTheContainer() {
         String supplier =
                 read("TestGrpcControllerFixture.java")
                         .routes()
@@ -53,9 +54,11 @@ public final class GrpcRouteAttributeReaderTest {
         assertTrue(
                 supplier.contains(
                         "() -> new io.valkyrja.grpc.routing.data.Route(\"/pkg.Greeter/SayHello\","));
+        // The cached route resolves the controller exactly as the runtime collector does, so a
+        // controller with constructor dependencies is reached from the cache too.
         assertTrue(
                 supplier.contains(
-                        "(c, r) -> new io.sindri.tests.fixtures.grpc.controller.TestGrpcControllerFixture().sayHello(c, r)"));
+                        "(c, r) -> c.get(io.sindri.tests.fixtures.grpc.controller.TestGrpcControllerFixture.class).sayHello(c, r)"));
     }
 
     @Test
@@ -239,7 +242,7 @@ public final class GrpcRouteAttributeReaderTest {
                 assertThrows(
                         RuntimeException.class,
                         () -> read("TestNonLiteralMethodGrpcControllerFixture.java"));
-        assertTrue(thrown.getMessage().contains("@Method(name)"));
+        assertTrue(thrown.getMessage().contains("@Route(name)"));
     }
 
     @Test
@@ -272,6 +275,87 @@ public final class GrpcRouteAttributeReaderTest {
                         .get("/pkg.NoPkg/Ping")
                         .toString();
         assertTrue(
-                supplier.contains("(c, r) -> new TestNoPackageGrpcControllerFixture().ping(c, r)"));
+                supplier.contains(
+                        "(c, r) -> c.get(TestNoPackageGrpcControllerFixture.class).ping(c, r)"));
+    }
+
+    @Test
+    void readFile_handlerMemberNamesTheHandlerAndTheMessageTypes() {
+        var result = read("TestHandlerGrpcControllerFixture.java");
+        String supplier = result.routes().get("/pkg.Handled/Member").toString();
+        GrpcRouteData data = result.routeData().get("/pkg.Handled/Member");
+
+        assertTrue(
+                supplier.contains(
+                        "io.sindri.tests.fixtures.grpc.handler.GreeterHandler::memberHandler"));
+        assertTrue(
+                supplier.contains(
+                        ".withRequestType(io.sindri.tests.fixtures.grpc.message.HelloRequest.class)"));
+        assertTrue(
+                supplier.contains(
+                        ".withResponseType(io.sindri.tests.fixtures.grpc.message.HelloReply.class)"));
+        assertEquals(
+                "io.sindri.tests.fixtures.grpc.handler.GreeterHandler",
+                data.handler().handlerClass());
+        assertEquals("memberHandler", data.handler().method());
+        assertEquals("io.sindri.tests.fixtures.grpc.message.HelloRequest", data.requestType());
+        assertEquals("io.sindri.tests.fixtures.grpc.message.HelloReply", data.responseType());
+    }
+
+    @Test
+    void readFile_routeAttributeNamesTheMiddlewareOfEachStage() {
+        GrpcRouteData data =
+                read("TestHandlerGrpcControllerFixture.java")
+                        .routeData()
+                        .get("/pkg.Handled/Member");
+
+        // An array member and a bare one are both read, and each stage keeps the attribute's own
+        // order.
+        assertEquals(
+                java.util.List.of(
+                        "io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware",
+                        "io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware"),
+                data.routeMatchedMiddleware());
+        assertEquals(
+                java.util.List.of("io.sindri.tests.fixtures.grpc.middleware.AuditMiddleware"),
+                data.responseSentMiddleware());
+    }
+
+    @Test
+    void readFile_handlerAttributeWinsOverTheHandlerMember() {
+        GrpcRouteData data =
+                read("TestHandlerGrpcControllerFixture.java")
+                        .routeData()
+                        .get("/pkg.Handled/Attribute");
+
+        assertEquals("attributeHandler", data.handler().method());
+    }
+
+    @Test
+    void readFile_optionalMembersAtTheirDefaultsNameNothing() {
+        var result = read("TestHandlerGrpcControllerFixture.java");
+        String supplier = result.routes().get("/pkg.Handled/Defaults").toString();
+        GrpcRouteData data = result.routeData().get("/pkg.Handled/Defaults");
+
+        assertNull(data.requestType());
+        assertNull(data.responseType());
+        assertFalse(supplier.contains("withRequestType"));
+        assertFalse(supplier.contains("withResponseType"));
+        assertFalse(supplier.contains("withAdded"));
+        // A handler member naming no class leaves the controller method as the handler.
+        assertEquals(
+                "io.sindri.tests.fixtures.grpc.controller.TestHandlerGrpcControllerFixture",
+                data.handler().handlerClass());
+        assertEquals("defaults", data.handler().method());
+    }
+
+    @Test
+    void readFile_markerHandlerAndNonClassMembersNameNothing() {
+        var result = read("TestHandlerGrpcControllerFixture.java");
+        GrpcRouteData data = result.routeData().get("/pkg.Handled/Marker");
+
+        assertEquals("marker", data.handler().method());
+        assertNull(data.requestType());
+        assertTrue(data.routeMatchedMiddleware().isEmpty());
     }
 }

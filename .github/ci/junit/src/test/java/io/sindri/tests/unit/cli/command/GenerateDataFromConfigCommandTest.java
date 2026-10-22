@@ -374,17 +374,17 @@ final class GenerateDataFromConfigCommandTest {
                 """
                 package app;
 
-                import io.valkyrja.grpc.routing.attribute.GrpcMethod;
-                import io.valkyrja.grpc.routing.attribute.GrpcService;
+                import io.valkyrja.grpc.routing.attribute.Route;
+                import io.valkyrja.grpc.routing.attribute.Service;
 
                 @Service(service = "app.Greeter")
                 public class AppGrpcController {
-                    @Method(name = "SayHello")
+                    @Route(name = "SayHello")
                     public Object sayHello(Object container, Object route) {
                         return null;
                     }
 
-                    @Method(name = "StreamHellos", serverStreaming = true)
+                    @Route(name = "StreamHellos", serverStreaming = true)
                     public Object streamHellos(Object container, Object route) {
                         return null;
                     }
@@ -454,12 +454,13 @@ final class GenerateDataFromConfigCommandTest {
         assertTrue(
                 grpc.contains(
                         "\"/app.Greeter/SayHello\", () -> new io.valkyrja.grpc.routing.data.Route(\"/app.Greeter/SayHello\","
-                                + " (c, r) -> new app.AppGrpcController().sayHello(c, r))"),
+                                + " (c, r) -> c.get(app.AppGrpcController.class).sayHello(c, r))"),
                 () -> "controller gRPC route missing:\n" + grpc);
         // Server-streaming flag carried through.
         assertTrue(
                 grpc.contains(
-                        "(c, r) -> new app.AppGrpcController().streamHellos(c, r)).withServerStreaming(true)"),
+                        "(c, r) -> c.get(app.AppGrpcController.class).streamHellos(c,"
+                                + " r)).withServerStreaming(true)"),
                 () -> "streaming gRPC route missing/incorrect:\n" + grpc);
         // Manually-defined provider getRoutes() gRPC route, combined and fully qualified.
         assertTrue(

@@ -15,7 +15,7 @@ import io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware;
 @Service(service = "pkg.Guarded")
 public class TestMiddlewareGrpcControllerFixture {
 
-    @Method(name = "Guarded")
+    @Route(name = "Guarded")
     @Middleware(name = AuthMiddleware.class)
     @Middleware(name = AuditMiddleware.class)
     public ServiceResponseContract guarded(ContainerContract container, RouteContract route) {

@@ -2,8 +2,8 @@ package io.sindri.tests.fixtures.grpc.controller;
 
 import io.valkyrja.container.manager.contract.ContainerContract;
 import io.valkyrja.grpc.message.response.contract.ServiceResponseContract;
-import io.valkyrja.grpc.routing.attribute.GrpcMethod;
-import io.valkyrja.grpc.routing.attribute.GrpcService;
+import io.valkyrja.grpc.routing.attribute.Route;
+import io.valkyrja.grpc.routing.attribute.Service;
 import io.valkyrja.grpc.routing.data.contract.RouteContract;
 
 @Deprecated
@@ -11,12 +11,12 @@ import io.valkyrja.grpc.routing.data.contract.RouteContract;
 public class TestGrpcControllerFixture {
 
     @Deprecated
-    @Method(name = "SayHello")
+    @Route(name = "SayHello")
     public ServiceResponseContract sayHello(ContainerContract container, RouteContract route) {
         return null;
     }
 
-    @Method(name = "StreamHellos", clientStreaming = true, serverStreaming = true)
+    @Route(name = "StreamHellos", clientStreaming = true, serverStreaming = true)
     public ServiceResponseContract streamHellos(ContainerContract container, RouteContract route) {
         return null;
     }

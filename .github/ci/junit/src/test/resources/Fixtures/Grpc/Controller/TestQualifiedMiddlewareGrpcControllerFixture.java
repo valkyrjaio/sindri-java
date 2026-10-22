@@ -14,7 +14,7 @@ import io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware;
 @Service(service = "pkg.Qualified")
 public class TestQualifiedMiddlewareGrpcControllerFixture {
 
-    @Method(name = "Qualified")
+    @Route(name = "Qualified")
     @Middleware(name = io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware.class)
     @Middleware(name = AuthMiddleware.class)
     public ServiceResponseContract qualified(ContainerContract container, RouteContract route) {

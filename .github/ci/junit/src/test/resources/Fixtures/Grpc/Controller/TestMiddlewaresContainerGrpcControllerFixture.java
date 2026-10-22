@@ -15,7 +15,7 @@ import io.sindri.tests.fixtures.grpc.middleware.AuthMiddleware;
 @Service(service = "pkg.Wrapped")
 public class TestMiddlewaresContainerGrpcControllerFixture {
 
-    @Method(name = "Wrapped")
+    @Route(name = "Wrapped")
     @Middlewares({@Middleware(name = AuthMiddleware.class), @Middleware(name = AuditMiddleware.class)})
     public ServiceResponseContract wrapped(ContainerContract container, RouteContract route) {
         return ServiceResponse.ok();

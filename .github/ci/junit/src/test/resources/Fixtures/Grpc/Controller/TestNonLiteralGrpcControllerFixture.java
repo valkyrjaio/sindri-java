@@ -16,7 +16,7 @@ public class TestNonLiteralGrpcControllerFixture {
 
     public static final String SERVICE_NAME = "pkg.NonLiteral";
 
-    @Method(name = "Ping")
+    @Route(name = "Ping")
     public ServiceResponseContract ping(ContainerContract container, RouteContract route) {
         return ServiceResponse.ok();
     }
