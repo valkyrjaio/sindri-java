@@ -188,13 +188,11 @@ public class MiddlewareClassifier extends AstReader {
                 continue;
             }
 
-            String written = pair.getValue().asClassExpr().getType().asString();
-            String fqn =
-                    written.contains(".")
-                            ? written
-                            : imports.getOrDefault(
-                                    written, pkg.isEmpty() ? written : pkg + "." + written);
-            into.add(fqn);
+            // The convenience attribute and the route attribute's stage member are two
+            // spellings of one field, so each resolves a class the one way.
+            into.add(
+                    resolveClassName(
+                            pair.getValue().asClassExpr().getType().asString(), imports, pkg));
         }
     }
 

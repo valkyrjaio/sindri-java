@@ -362,6 +362,57 @@ public final class GrpcRouteAttributeReaderTest {
     }
 
     @Test
+    void readFile_emitsTheAddCallOfEveryStage() {
+        String supplier =
+                read("TestHandlerGrpcControllerFixture.java")
+                        .routes()
+                        .get("/pkg.Handled/Member")
+                        .toString();
+
+        // The emitted builder call is the other half of each stage row. A wrong call name parses
+        // cleanly here and lands in a cache file that does not compile.
+        assertTrue(
+                supplier.contains(
+                        ".withAddedRouteMatchedMiddleware(java.util.List.of("
+                                + MIDDLEWARE
+                                + "AuthMiddleware.class, "
+                                + MIDDLEWARE
+                                + "MatchedMiddleware.class))"));
+        assertTrue(
+                supplier.contains(
+                        ".withAddedRouteDispatchedMiddleware(java.util.List.of("
+                                + MIDDLEWARE
+                                + "DispatchedMiddleware.class))"));
+        assertTrue(
+                supplier.contains(
+                        ".withAddedThrowableCaughtMiddleware(java.util.List.of("
+                                + MIDDLEWARE
+                                + "CaughtMiddleware.class))"));
+        assertTrue(
+                supplier.contains(
+                        ".withAddedSendingResponseMiddleware(java.util.List.of("
+                                + MIDDLEWARE
+                                + "SendingMiddleware.class))"));
+        assertTrue(
+                supplier.contains(
+                        ".withAddedResponseSentMiddleware(java.util.List.of("
+                                + MIDDLEWARE
+                                + "AuditMiddleware.class))"));
+    }
+
+    @Test
+    void readFile_anImportOfTheSentinelsOwnNameShadowsTheSentinel() {
+        // The sentinel is a class, not a spelling, so a class an application imports under the
+        // same simple name is a type the member names.
+        assertEquals(
+                "io.sindri.tests.fixtures.grpc.message.Void",
+                read("TestShadowedVoidGrpcControllerFixture.java")
+                        .routeData()
+                        .get("/pkg.Shadowed/Shadowed")
+                        .requestType());
+    }
+
+    @Test
     void readFile_resolvesANestedMessageTypeThroughTheOuterClassImport() {
         var result = read("TestHandlerGrpcControllerFixture.java");
         GrpcRouteData data = result.routeData().get("/pkg.Handled/Nested");
