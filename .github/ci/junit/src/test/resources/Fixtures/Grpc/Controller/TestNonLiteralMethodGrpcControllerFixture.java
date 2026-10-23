@@ -14,7 +14,7 @@ public class TestNonLiteralMethodGrpcControllerFixture {
 
     public static final String METHOD_NAME = "Ping";
 
-    @Method(name = METHOD_NAME)
+    @Route(name = METHOD_NAME)
     public ServiceResponseContract ping(ContainerContract container, RouteContract route) {
         return ServiceResponse.ok();
     }

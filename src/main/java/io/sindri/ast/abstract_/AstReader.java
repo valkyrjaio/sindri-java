@@ -89,7 +89,12 @@ public abstract class AstReader {
             return importMap.get(name);
         }
         if (name.contains(".")) {
-            return name;
+            // A nested class is written `Outer.Inner` and the file imports the outer class
+            // alone, so a pair emitted as written names a class a generated file cannot see.
+            int firstDot = name.indexOf('.');
+            String outer = importMap.get(name.substring(0, firstDot));
+
+            return outer == null ? name : outer + name.substring(firstDot);
         }
         return pkg.isEmpty() ? name : pkg + "." + name;
     }

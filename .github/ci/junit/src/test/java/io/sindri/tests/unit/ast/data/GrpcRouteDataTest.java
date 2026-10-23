@@ -27,6 +27,8 @@ final class GrpcRouteDataTest {
         assertEquals("pkg.Greeter", data.service());
         assertEquals("SayHello", data.methodName());
         assertNull(data.handler());
+        assertNull(data.requestType());
+        assertNull(data.responseType());
         assertFalse(data.clientStreaming());
         assertFalse(data.serverStreaming());
         assertTrue(data.routeMatchedMiddleware().isEmpty());

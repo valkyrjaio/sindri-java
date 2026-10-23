@@ -21,6 +21,10 @@ public interface GrpcRouteDataContract {
 
     @Nullable HandlerDataContract handler();
 
+    @Nullable String requestType();
+
+    @Nullable String responseType();
+
     boolean clientStreaming();
 
     boolean serverStreaming();
