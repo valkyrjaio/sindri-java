@@ -1,6 +1,12 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.4.45...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.5.0...26.x)
+
+## [v26.5.0](https://github.com/valkyrjaio/sindri-java/compare/v26.4.45...v26.5.0) - 2026-10-22
+
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/204
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/205
+* [Grpc] feat!: Read the renamed route attribute and every member it declares by [@MelechMizrachi](https://github.com/MelechMizrachi) in https://github.com/valkyrjaio/sindri-java/pull/203
 
 ## [v26.4.45](https://github.com/valkyrjaio/sindri-java/compare/v26.4.44...v26.4.45) - 2026-10-21
 
