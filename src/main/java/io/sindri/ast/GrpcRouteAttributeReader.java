@@ -35,12 +35,6 @@ import org.jspecify.annotations.Nullable;
 public class GrpcRouteAttributeReader extends AstReader
         implements GrpcRouteAttributeReaderContract {
 
-    /**
-     * The gRPC middleware stages, in {@link GrpcRouteData} constructor order. Each pairs a stage
-     * contract (matched against a middleware's ancestry) with the {@code @Route} member that names
-     * the stage's middleware and the {@code Route} builder call that registers a class under it in
-     * the generated cache.
-     */
     private enum Stage {
         ROUTE_MATCHED(
                 "io.valkyrja.grpc.middleware.contract.RouteMatchedMiddlewareContract",
@@ -343,9 +337,8 @@ public class GrpcRouteAttributeReader extends AstReader
         String written = expr.asClassExpr().getTypeAsString();
         String imported = imports.get(written);
 
-        // The sentinel is a class rather than a spelling, so the qualified spelling and an
-        // import of the sentinel itself both name it. An import of another class of the same
-        // simple name shadows it, and that class is one the member names.
+        // The sentinel is a class rather than a spelling, so an import of another class of the
+        // same simple name shadows it, and that class is one the member names.
         if (ABSENT_CLASS.equals(written)
                 || ("Void".equals(written)
                         && (imported == null || ABSENT_CLASS.equals(imported)))) {

@@ -89,9 +89,8 @@ public abstract class AstReader {
             return importMap.get(name);
         }
         if (name.contains(".")) {
-            // A nested class is written `Outer.Inner`, and the file imports the outer class
-            // alone, so the import map holds the first segment only. A generated file imports
-            // neither, and the pair emitted as written names a class that file cannot see.
+            // A nested class is written `Outer.Inner` and the file imports the outer class
+            // alone, so a pair emitted as written names a class a generated file cannot see.
             int firstDot = name.indexOf('.');
             String outer = importMap.get(name.substring(0, firstDot));
 
