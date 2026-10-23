@@ -319,9 +319,8 @@ public final class GrpcRouteAttributeReaderTest {
                         .routeData()
                         .get("/pkg.Handled/Member");
 
-        // Every one of the five stage members is read, so a member this reader spells wrong is
-        // caught here rather than dropping that stage's middleware from the cache in silence. An
-        // array member and a bare one are both read, and each stage keeps the attribute's order.
+        // A stage member this reader spells wrong drops that stage's middleware from the cache
+        // in silence, so every one of the five is read here.
         assertEquals(
                 java.util.List.of(MIDDLEWARE + "AuthMiddleware", MIDDLEWARE + "MatchedMiddleware"),
                 data.routeMatchedMiddleware());
