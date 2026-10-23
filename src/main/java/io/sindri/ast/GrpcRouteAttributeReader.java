@@ -267,7 +267,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Read the method-level {@code @RouteHandler}, the second spelling of the handler field.
+     * Read the handler the method-level {@code @RouteHandler} names.
      *
      * @param method the handler method
      * @param imports the controller's imports, for resolving the handler class name
@@ -286,9 +286,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Read a {@code @RouteHandler}, whether it stands on the method or fills the {@code handler}
-     * member. A Java annotation member holds a constant and no callable, so the handler is the
-     * class and the method name.
+     * Read the handler a {@code @RouteHandler} names.
      *
      * @param expr the annotation
      * @param imports the controller's imports, for resolving the handler class name
@@ -321,8 +319,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Resolve an optional {@code Class<?>} member, where {@code Void.class} means the member was
-     * left at its default and names no class.
+     * Resolve the class an optional {@code Class<?>} member names.
      *
      * @param expr the annotation value
      * @param imports the controller's imports, for resolving the class name
@@ -349,7 +346,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Resolve a {@code Class<?>[]} member, which a single value may also spell without the braces.
+     * Resolve each class a {@code Class<?>[]} member names.
      *
      * @param expr the annotation value
      * @param imports the controller's imports, for resolving each class name
@@ -400,8 +397,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Join what the route attribute names with what the convenience attribute adds. A list field
-     * adds the convenience attribute's value, so the attribute's own order comes first.
+     * Resolve the middleware of each stage.
      *
      * @param named the middleware each stage member names
      * @param classified the middleware the {@code @Middleware} attributes name
@@ -411,6 +407,7 @@ public class GrpcRouteAttributeReader extends AstReader
             Map<Stage, List<String>> named, Map<Stage, List<String>> classified) {
         Map<Stage, List<String>> byStage = new EnumMap<>(Stage.class);
 
+        // A list field adds the convenience attribute's value, so the member's classes come first.
         for (Stage stage : Stage.values()) {
             List<String> classes = new ArrayList<>(named.getOrDefault(stage, List.of()));
             classes.addAll(stageList(classified, stage));
@@ -426,9 +423,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Build the handler expression the cached route holds: a method reference to the static handler
-     * the route names, or a call that resolves the controller from the container, exactly as the
-     * runtime collector resolves it.
+     * Build the expression the cached route holds for its handler.
      *
      * @param handler the handler the route names, or null where it names none
      * @param controllerFqn the controller class
@@ -441,6 +436,7 @@ public class GrpcRouteAttributeReader extends AstReader
             return handler.handlerClass() + "::" + handler.method();
         }
 
+        // The controller comes from the container, as the runtime collector resolves it too.
         return "(c, r) -> c.get(" + controllerFqn + ".class)." + methodName + "(c, r)";
     }
 
