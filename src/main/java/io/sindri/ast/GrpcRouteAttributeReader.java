@@ -272,7 +272,7 @@ public class GrpcRouteAttributeReader extends AstReader
      * @param method the handler method
      * @param imports the controller's imports, for resolving the handler class name
      * @param pkg the controller's package, for a same-package handler class
-     * @return the handler it names, or null where the method carries none
+     * @return the handler it names
      */
     private @Nullable HandlerData readHandlerAttribute(
             MethodDeclaration method, Map<String, String> imports, String pkg) {
@@ -292,7 +292,7 @@ public class GrpcRouteAttributeReader extends AstReader
      * @param imports the controller's imports, for resolving the handler class name
      * @param pkg the controller's package, for a same-package handler class
      * @param where the declaring method, for the error message
-     * @return the handler it names, or null where it names the absent type
+     * @return the handler it names
      */
     private @Nullable HandlerData readHandler(
             Expression expr, Map<String, String> imports, String pkg, String where) {
@@ -324,7 +324,7 @@ public class GrpcRouteAttributeReader extends AstReader
      * @param expr the annotation value
      * @param imports the controller's imports, for resolving the class name
      * @param pkg the controller's package, for a same-package class
-     * @return the fully-qualified class name, or "" where the member names none
+     * @return the fully-qualified class name
      */
     private String extractOptionalClass(Expression expr, Map<String, String> imports, String pkg) {
         if (!expr.isClassExpr()) {
