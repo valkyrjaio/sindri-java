@@ -267,7 +267,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Read the handler the method-level {@code @RouteHandler} names.
+     * Read the handler the method-level {@code @Handler} names.
      *
      * @param method the handler method
      * @param imports the controller's imports, for resolving the handler class name
@@ -277,7 +277,7 @@ public class GrpcRouteAttributeReader extends AstReader
     private @Nullable HandlerData readHandlerAttribute(
             MethodDeclaration method, Map<String, String> imports, String pkg) {
         for (AnnotationExpr annotation : method.getAnnotations()) {
-            if (annotation.getNameAsString().equals("RouteHandler")) {
+            if (annotation.getNameAsString().equals("Handler")) {
                 return readHandler(annotation, imports, pkg, method.getNameAsString());
             }
         }
@@ -286,7 +286,7 @@ public class GrpcRouteAttributeReader extends AstReader
     }
 
     /**
-     * Read the handler a {@code @RouteHandler} names.
+     * Read the handler a {@code @Handler} names.
      *
      * @param expr the annotation
      * @param imports the controller's imports, for resolving the handler class name
@@ -310,7 +310,7 @@ public class GrpcRouteAttributeReader extends AstReader
                 case "handlerMethod" ->
                         handlerMethod =
                                 requireStringLiteral(
-                                        pair.getValue(), "@RouteHandler(handlerMethod)", where);
+                                        pair.getValue(), "@Handler(handlerMethod)", where);
                 default -> {}
             }
         }
