@@ -440,12 +440,7 @@ public class GrpcRouteAttributeReader extends AstReader
         return "(c, r) -> c.get(" + controllerFqn + ".class)." + methodName + "(c, r)";
     }
 
-    /**
-     * Build the {@code Supplier<RouteContract>} expression stored as a route's value, e.g. {@code
-     * () -> new Route("/pkg.Greeter/SayHello", (c, r) -> c.get(pkg.Greeter.class).sayHello(c, r))}.
-     * Fully qualified names are used so the generated file needs no extra imports. Middleware is
-     * emitted pre-classified, so the cached route needs no stage discovery at runtime.
-     */
+    /** Build the {@code Supplier<RouteContract>} expression stored as a route's value. */
     private Expression buildRouteValue(
             String fullMethod,
             String handlerExpression,
@@ -454,6 +449,7 @@ public class GrpcRouteAttributeReader extends AstReader
             boolean clientStreaming,
             boolean serverStreaming,
             Map<Stage, List<String>> middleware) {
+        // Every name is fully qualified, so the generated file needs no import of its own.
         StringBuilder supplier =
                 new StringBuilder(
                         "() -> new io.valkyrja.grpc.routing.data.Route(\""
@@ -473,6 +469,7 @@ public class GrpcRouteAttributeReader extends AstReader
         if (serverStreaming) {
             supplier.append(".withServerStreaming(true)");
         }
+        // The middleware is emitted under its stage, so a cached route discovers no stage.
         for (Stage stage : Stage.values()) {
             List<String> classes = stageList(middleware, stage);
             if (classes.isEmpty()) {
