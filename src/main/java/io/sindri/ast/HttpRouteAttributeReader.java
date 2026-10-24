@@ -109,7 +109,7 @@ public class HttpRouteAttributeReader extends AstReader
 
             Optional<AnnotationExpr> handlerAnnotation =
                     method.getAnnotations().stream()
-                            .filter(a -> a.getNameAsString().equals("RouteHandler"))
+                            .filter(a -> a.getNameAsString().equals("Handler"))
                             .findFirst();
 
             String handlerClass = "";

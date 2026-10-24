@@ -99,7 +99,7 @@ public class CliRouteAttributeReader extends AstReader implements CliRouteAttrib
             String handlerMethod = "";
             Optional<AnnotationExpr> handlerAnnotation =
                     method.getAnnotations().stream()
-                            .filter(a -> a.getNameAsString().equals("RouteHandler"))
+                            .filter(a -> a.getNameAsString().equals("Handler"))
                             .findFirst();
             if (handlerAnnotation.isPresent()
                     && handlerAnnotation.get() instanceof NormalAnnotationExpr handler) {
