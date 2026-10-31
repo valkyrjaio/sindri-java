@@ -444,7 +444,7 @@ public final class GrpcRouteAttributeReaderTest {
                 assertThrows(
                         RuntimeException.class,
                         () -> read("TestNonLiteralHandlerMethodGrpcControllerFixture.java"));
-        assertTrue(thrown.getMessage().contains("@RouteHandler(handlerMethod)"));
+        assertTrue(thrown.getMessage().contains("@Handler(handlerMethod)"));
         assertTrue(thrown.getMessage().contains("string literal"));
     }
 

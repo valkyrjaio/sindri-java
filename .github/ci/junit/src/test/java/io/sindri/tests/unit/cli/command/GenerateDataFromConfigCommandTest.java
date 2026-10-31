@@ -272,11 +272,11 @@ final class GenerateDataFromConfigCommandTest {
                 package app;
 
                 import io.valkyrja.cli.routing.attribute.Route;
-                import io.valkyrja.cli.routing.attribute.route.RouteHandler;
+                import io.valkyrja.cli.routing.attribute.route.Handler;
 
                 public class AppCliController {
                     @Route(name = "greet", description = "Greet")
-                    @RouteHandler(handlerClass = AppCliRouteProvider.class, handlerMethod = "greet")
+                    @Handler(handlerClass = AppCliRouteProvider.class, handlerMethod = "greet")
                     public static void greet() {}
                 }
                 """);
@@ -291,37 +291,37 @@ final class GenerateDataFromConfigCommandTest {
                 import io.valkyrja.http.routing.attribute.Parameter;
                 import io.valkyrja.http.routing.attribute.Route;
                 import io.valkyrja.http.routing.attribute.route.Middleware;
-                import io.valkyrja.http.routing.attribute.route.RouteHandler;
+                import io.valkyrja.http.routing.attribute.route.Handler;
                 import io.valkyrja.http.routing.constant.Regex;
 
                 public class AppHttpController {
                     @Route(path = "/test", name = "test.get", requestMethods = {RequestMethod.GET})
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void get() {}
 
                     @Route(path = "/welcome", name = "welcome")
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void welcome() {}
 
                     @Route(path = "/show/{value}", name = "show")
                     @Parameter(name = "value", regex = Regex.ALPHA)
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void show() {}
 
                     @Route(path = "/pair/{a}/{b}", name = "pair")
                     @Parameter(name = "a", regex = Regex.ALPHA)
                     @Parameter(name = "b", regex = Regex.NUM)
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void pair() {}
 
                     @Route(path = "/multi", name = "multi",
                             requestMethods = {RequestMethod.GET, RequestMethod.POST})
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void multi() {}
 
                     @Route(path = "/bad/{x}", name = "bad")
                     @Parameter(name = "y", regex = Regex.NUM)
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void bad() {}
 
                     // Two @Middleware whose classes cannot be resolved: MissingMiddleware is under
@@ -333,7 +333,7 @@ final class GenerateDataFromConfigCommandTest {
                     @Middleware(name = AppGuardMiddleware.class)
                     @Middleware(name = MissingMiddleware.class)
                     @Middleware(name = ext.NoMiddleware.class)
-                    @RouteHandler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
+                    @Handler(handlerClass = AppHttpRouteProvider.class, handlerMethod = "getHandler")
                     public static void guarded() {}
                 }
                 """);
