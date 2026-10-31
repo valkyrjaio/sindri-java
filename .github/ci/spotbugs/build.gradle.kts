@@ -13,7 +13,7 @@ import com.github.spotbugs.snom.SpotBugsTask
 plugins {
     java
     id("com.github.spotbugs") version "6.5.13"
-    id("com.github.ben-manes.versions") version "0.66.0"
+    id("com.github.ben-manes.versions") version "0.67.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
 }
 
@@ -51,7 +51,7 @@ dependencies {
     // toolVersion string is reported as outdated every run but never updated — it drifts forever.
     spotbugs("com.github.spotbugs:spotbugs:4.10.5")
 
-    implementation("io.valkyrja:valkyrja:26.12.4")
+    implementation("io.valkyrja:valkyrja:26.12.5")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
 
