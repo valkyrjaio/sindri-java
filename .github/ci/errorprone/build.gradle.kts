@@ -48,7 +48,7 @@ dependencies {
     implementation("io.valkyrja:valkyrja:26.12.5")
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
-    errorprone("com.google.errorprone:error_prone_core:2.51.0")
+    errorprone("com.google.errorprone:error_prone_core:2.52.0")
     errorprone("com.uber.nullaway:nullaway:0.14.3")
 
     // Mirrors the JUnit build's test classpath — needed only so the tests compile here.
