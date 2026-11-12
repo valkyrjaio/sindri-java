@@ -21,7 +21,7 @@ import io.sindri.tests.fixtures.grpc.middleware.SendingMiddleware;
 import io.valkyrja.grpc.routing.attribute.Route;
 import io.valkyrja.grpc.routing.attribute.Service;
 import io.valkyrja.grpc.routing.attribute.route.Middleware;
-import io.valkyrja.grpc.routing.attribute.route.RouteHandler;
+import io.valkyrja.grpc.routing.attribute.route.Handler;
 
 /** Fixture covering each way a route names its handler, its message types and its middleware. */
 @Service(service = "pkg.Handled")
@@ -32,7 +32,7 @@ public class TestHandlerGrpcControllerFixture {
     @Route(
             name = "Member",
             handler =
-                    @RouteHandler(
+                    @Handler(
                             handlerClass = GreeterHandler.class,
                             handlerMethod = "memberHandler"),
             requestType = HelloRequest.class,
@@ -50,10 +50,10 @@ public class TestHandlerGrpcControllerFixture {
     @Route(
             name = "Attribute",
             handler =
-                    @RouteHandler(
+                    @Handler(
                             handlerClass = GreeterHandler.class,
                             handlerMethod = "memberHandler"))
-    @RouteHandler(handlerClass = GreeterHandler.class, handlerMethod = "attributeHandler")
+    @Handler(handlerClass = GreeterHandler.class, handlerMethod = "attributeHandler")
     public Object attribute(Object container, Object route) {
         return null;
     }
@@ -80,7 +80,7 @@ public class TestHandlerGrpcControllerFixture {
     // handler hits its default switch arm, and the sentinel's qualified spelling means the same.
     @Route(
             name = "Defaults",
-            handler = @RouteHandler(handlerClass = Void.class, unknown = "x"),
+            handler = @Handler(handlerClass = Void.class, unknown = "x"),
             requestType = Void.class,
             responseType = java.lang.Void.class,
             routeMatchedMiddleware = {})
@@ -92,7 +92,7 @@ public class TestHandlerGrpcControllerFixture {
     // that names something other than a class holds nothing.
     @Route(
             name = "Marker",
-            handler = @RouteHandler,
+            handler = @Handler,
             requestType = REQUEST,
             routeMatchedMiddleware = {OTHER})
     public Object marker(Object container, Object route) {
