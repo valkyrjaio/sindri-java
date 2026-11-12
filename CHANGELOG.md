@@ -1,6 +1,10 @@
 # Release Notes for 26.x
 
-## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.5.7...26.x)
+## [Unreleased](https://github.com/valkyrjaio/sindri-java/compare/v26.5.8...26.x)
+
+## [v26.5.8](https://github.com/valkyrjaio/sindri-java/compare/v26.5.7...v26.5.8) - 2026-11-12
+
+* [Dependency] build: Update Gradle dependencies by [@valkyrja-volundr](https://github.com/valkyrja-volundr)[bot] in https://github.com/valkyrjaio/sindri-java/pull/221
 
 ## [v26.5.7](https://github.com/valkyrjaio/sindri-java/compare/v26.5.6...v26.5.7) - 2026-11-09
 
