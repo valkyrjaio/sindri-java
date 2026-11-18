@@ -74,10 +74,10 @@ public final class CliRouteAttributeReaderTest {
                         fixturePath("Cli/Controller/TestCliEdgeRoutesControllerFixture.java"));
 
         assertEquals(3, result.routes().size());
-        // No @RouteHandler → the supplier uses a null handler.
+        // No @Handler → the supplier uses a null handler.
         assertTrue(result.routes().get("nohandler").toString().contains(", null)"));
         assertTrue(result.routes().get("weird").toString().contains("greetHandler"));
-        // Marker @RouteHandler (not a NormalAnnotationExpr) → null handler too.
+        // Marker @Handler (not a NormalAnnotationExpr) → null handler too.
         assertTrue(result.routes().get("marker").toString().contains(", null)"));
     }
 
