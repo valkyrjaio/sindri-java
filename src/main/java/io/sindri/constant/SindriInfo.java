@@ -10,7 +10,7 @@ package io.sindri.constant;
 
 public final class SindriInfo {
 
-    public static final String VERSION = "26.5.9";
-    public static final String VERSION_BUILD_DATE_TIME = "November 17 2026 14:31:32 MST";
+    public static final String VERSION = "26.5.10";
+    public static final String VERSION_BUILD_DATE_TIME = "November 18 2026 14:07:32 MST";
     public static final String ICON = "    ▗▄█████▄▖\n    ▝▀█████▀▘\n        █\n        █";
 }
