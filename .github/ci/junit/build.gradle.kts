@@ -47,8 +47,8 @@ dependencies {
     implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     compileOnly("org.jspecify:jspecify:1.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("org.mockito:mockito-core:5.24.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.24.0")
+    testImplementation("org.mockito:mockito-core:5.25.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.25.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

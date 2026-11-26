@@ -57,8 +57,8 @@ dependencies {
 
     // Mirrors the JUnit build's test classpath — needed only so the tests compile here.
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
-    testImplementation("org.mockito:mockito-core:5.24.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:5.24.0")
+    testImplementation("org.mockito:mockito-core:5.25.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.25.0")
     testImplementation("org.jspecify:jspecify:1.0.1")
 }
 
