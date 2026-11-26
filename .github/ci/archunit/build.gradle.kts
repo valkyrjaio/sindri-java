@@ -57,8 +57,8 @@ dependencies {
     "testTreeImplementation"("io.valkyrja:valkyrja:26.13.2")
     "testTreeImplementation"("com.github.javaparser:javaparser-symbol-solver-core:3.28.2")
     "testTreeImplementation"("org.junit.jupiter:junit-jupiter:6.1.3")
-    "testTreeImplementation"("org.mockito:mockito-core:5.24.0")
-    "testTreeImplementation"("org.mockito:mockito-junit-jupiter:5.24.0")
+    "testTreeImplementation"("org.mockito:mockito-core:5.25.0")
+    "testTreeImplementation"("org.mockito:mockito-junit-jupiter:5.25.0")
     "testTreeImplementation"("org.jspecify:jspecify:1.0.1")
 }
 
